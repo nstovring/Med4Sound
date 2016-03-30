@@ -37,7 +37,7 @@ public class AudioCalculator : NetworkBehaviour
             kinectSensor = KinectSensor.GetDefault();
             kinectSensor.AudioSource.PropertyChanged += UpdateAudioTrackingPosition;
         }
-        if (offsetCalculator.players.Length > 0)
+        if (offsetCalculator != null && offsetCalculator.players.Length > 0)
         {
             float angle1 = Mathf.Rad2Deg * offsetCalculator.players[0].GetComponent<UserSyncPosition>().beamAngle;
             float angle2 = Mathf.Rad2Deg * offsetCalculator.players[1].GetComponent<UserSyncPosition>().beamAngle;

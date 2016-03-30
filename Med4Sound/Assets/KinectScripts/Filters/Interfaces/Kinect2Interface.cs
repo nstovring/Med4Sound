@@ -20,6 +20,7 @@ public class Kinect2Interface : DepthSensorInterface
 	private ColorFrameReader colorFrameReader;
 	private DepthFrameReader depthFrameReader;
 	private InfraredFrameReader infraredFrameReader;
+    private AudioBeamFrameReader audioBeamFrameReader;
 	
 	private MultiSourceFrameReader multiSourceFrameReader;
 	private MultiSourceFrame multiSourceFrame;
@@ -29,6 +30,7 @@ public class Kinect2Interface : DepthSensorInterface
 	private ColorFrame msColorFrame = null;
 	private DepthFrame msDepthFrame = null;
 	private InfraredFrame msInfraredFrame = null;
+    public AudioBeamFrame msAudioBeamFrame = null;
 
 	private int bodyCount;
 	private Body[] bodyData;
@@ -313,11 +315,20 @@ public class Kinect2Interface : DepthSensorInterface
 			
 			sensorData.infraredImage = new ushort[kinectSensor.InfraredFrameSource.FrameDescription.LengthInPixels];
 		}
-		
-		//if(!kinectSensor.IsOpen)
-		{
-			//Debug.Log("Opening sensor, available: " + kinectSensor.IsAvailable);
-			kinectSensor.Open();
+
+        if ((dwFlags & KinectInterop.FrameSource.TypeAudio) != 0)
+        {
+            if (!bUseMultiSource)
+                audioBeamFrameReader = kinectSensor.AudioSource.OpenReader();
+
+            sensorData.AudioSource = kinectSensor.AudioSource;
+        }
+
+
+        //if(!kinectSensor.IsOpen)
+        {
+            //Debug.Log("Opening sensor, available: " + kinectSensor.IsAvailable);
+            kinectSensor.Open();
 		}
 
 		float fWaitTime = Time.realtimeSinceStartup + 3f;
@@ -373,8 +384,14 @@ public class Kinect2Interface : DepthSensorInterface
 			infraredFrameReader.Dispose();
 			infraredFrameReader = null;
 		}
-		
-		if(multiSourceFrameReader != null)
+
+        if (audioBeamFrameReader != null)
+        {
+            audioBeamFrameReader.Dispose();
+            audioBeamFrameReader = null;
+        }
+
+        if (multiSourceFrameReader != null)
 		{
 			multiSourceFrameReader.Dispose();
 			multiSourceFrameReader = null;
@@ -665,7 +682,7 @@ public class Kinect2Interface : DepthSensorInterface
 		return bNewFrame;
 	}
 
-	public bool PollDepthFrame (KinectInterop.SensorData sensorData)
+    public bool PollDepthFrame (KinectInterop.SensorData sensorData)
 	{
 		bool bNewFrame = false;
 		

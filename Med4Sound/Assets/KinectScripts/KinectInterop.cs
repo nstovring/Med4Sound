@@ -10,6 +10,7 @@ using System.IO;
 using System.Text;
 using ICSharpCode.SharpZipLib.Zip;
 using OpenCvSharp;
+using AudioSource = Windows.Kinect.AudioSource;
 
 
 /// <summary>
@@ -364,6 +365,7 @@ public class KinectInterop
 		
 		public bool isPlayModeEnabled;
 		public string playModeData;
+	    public AudioSource AudioSource { get; set; }
 	}
 
 	public struct SmoothParameters

@@ -7,13 +7,15 @@ using System.Globalization;
 using System.Linq;
 using Windows.Data;
 
-public class AudioAnalyzer : MonoBehaviour{
+public class AudioAnalyzer : MonoBehaviour
+{
 
     Windows.Kinect.AudioSource aSource1;
     Windows.Kinect.AudioSource aSource2;
 
     public UnityEngine.AudioSource unityAudioSource;
     public GameObject AudioGameObject;
+
     /// <summary>
     /// Number of samples captured from Kinect audio stream each millisecond.
     /// </summary>
@@ -22,7 +24,7 @@ public class AudioAnalyzer : MonoBehaviour{
     /// <summary>
     /// Number of bytes in each Kinect audio stream sample (32-bit IEEE float).
     /// </summary>
-    private const int BytesPerSample = sizeof(float);
+    private const int BytesPerSample = sizeof (float);
 
     /// <summary>
     /// Number of audio samples represented by each column of pixels in wave bitmap.
@@ -44,15 +46,15 @@ public class AudioAnalyzer : MonoBehaviour{
     /// </summary>
     private const int EnergyBitmapHeight = 195;
 
-     /// <summary>
+    /// <summary>
     /// Array of background-color pixels corresponding to an area equal to the size of whole energy bitmap.
     /// </summary>
-    private readonly byte[] backgroundPixels = new byte[EnergyBitmapWidth * EnergyBitmapHeight];
+    private readonly byte[] backgroundPixels = new byte[EnergyBitmapWidth*EnergyBitmapHeight];
 
     /// <summary>
     /// Will be allocated a buffer to hold a single sub frame of audio data read from audio stream.
     /// </summary>
-    private byte[] audioBuffer = null;
+    public byte[] audioBuffer = null;
 
     /// <summary>
     /// Buffer used to store audio stream energy data as we read audio.
@@ -60,7 +62,7 @@ public class AudioAnalyzer : MonoBehaviour{
     /// stream animation effect, since rendering happens on a different schedule with respect to audio
     /// capture.
     /// </summary>
-    private readonly float[] energy = new float[(uint)(EnergyBitmapWidth * 1.25)];
+    private readonly float[] energy = new float[(uint) (EnergyBitmapWidth*1.25)];
 
     /// <summary>
     /// Object for locking energy buffer to synchronize threads.
@@ -133,17 +135,16 @@ public class AudioAnalyzer : MonoBehaviour{
     AudioBeam aBeam;
 
     private DepthFrameReader dFrameReader;
-
+    private Windows.Kinect.AudioSource audioSource;
     // Use this for initialization
-    void Start () {
-        kinectSensor = KinectSensor.GetDefault();
+    void Start()
+    {
+        //kinectSensor = KinectSensor.GetDefault();
         // Get its audio source
-
+        reader = null;
         // Open the sensor
-        kinectSensor.Open();
-
         // Get its audio source
-        Windows.Kinect.AudioSource audioSource = kinectSensor.AudioSource;
+        audioSource = KinectManager.Instance.GetSensorData().AudioSource;
 
         unityAudioSource = GetComponent<UnityEngine.AudioSource>();
 
@@ -153,42 +154,118 @@ public class AudioAnalyzer : MonoBehaviour{
         audioBuffer = new byte[audioSource.SubFrameLengthInBytes];
 
         // Open the reader for the audio frames
-        reader = kinectSensor.AudioSource.OpenReader();
         Debug.Log("Setup stuff");
+
+        reader = audioSource.OpenReader();
 
         if (reader != null)
         {
             // Subscribe to new audio frame arrived events
             Debug.Log("Subscribe event");
-            reader.PropertyChanged += ReaderOnPropertyChanged;
-            reader.FrameArrived += ReaderOnFrameArrived;
+            //reader = audioSource.OpenReader();
+            //audioSource.PropertyChanged += ReaderOnPropertyChanged;
+            audioSource.FrameCaptured += AudioSourceOnFrameCaptured;
+            audioSource.OpenReader().FrameArrived += ReaderOnFrameArrived;
+            //reader.FrameArrived += ReaderOnFrameArrived;
         }
     }
 
-    private void ReaderOnFrameArrived(object sender, AudioBeamFrameArrivedEventArgs audioBeamFrameArrivedEventArgs)
+    private void AudioSourceOnFrameCaptured(object sender, FrameCapturedEventArgs e)
     {
-        Debug.Log("Frame Arrived!!");
+        Debug.Log("Frame Captured!!");
     }
 
-    private void ReaderOnPropertyChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
+    private void ReaderOnFrameArrived(object sender, AudioBeamFrameArrivedEventArgs e)
     {
-        Debug.Log("PropertyChangedEvent");
+        if (flagAnalyzingSound)
+            return;
+        flagAnalyzingSound = true;
+        Debug.Log("Frame Arrived");
+        flagAnalyzingSound = false;
+    }
+    //flag which signifies if sound analysis is being performed so queued events should be dropped
+    private bool flagAnalyzingSound;
+
+    private AudioBeamFrameArrivedEventArgs eventArgs = null;
+
+    public void Update()
+    {
+        if (eventArgs != null)
+        {
+            Debug.Log(eventArgs.FrameReference.AcquireBeamFrames()[0].AudioBeam.BeamAngle);
+        }
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            GetSound(reader.AcquireLatestBeamFrames());
+        }
+    }
+
+    private void GetSound(IList<AudioBeamFrame> frameList)
+    {
+        audioRecording = new List<float>();
+
+        if (frameList != null)
+        {
+            Debug.Log("Acquiring sound");
+
+            // Only one audio beam is supported. Get the sub frame list for this beam
+            IList<AudioBeamSubFrame> subFrameList = frameList[0].SubFrames;
+            // Loop over all sub frames, extract audio buffer and beam information
+            foreach (AudioBeamSubFrame subFrame in subFrameList)
+            {
+                // Process audio buffer
+                subFrame.CopyFrameDataToArray(this.audioBuffer);
+                for (int i = 0; i < this.audioBuffer.Length; i += BytesPerSample)
+                {
+                    // Extract the 32-bit IEEE float sample from the byte array
+                    float audioSample = BitConverter.ToSingle(audioBuffer, i);
+                    // add audiosample to array for analysis
+                    audioRecording.Add(audioSample);
+                    this.accumulatedSquareSum += audioSample * audioSample;
+                    ++this.accumulatedSampleCount;
+
+                    if (this.accumulatedSampleCount < SamplesPerColumn)
+                    {
+                        continue;
+                    }
+
+                    float meanSquare = this.accumulatedSquareSum / SamplesPerColumn;
+
+                    if (meanSquare > 1.0f)
+                    {
+                        // A loud audio source right next to the sensor may result in mean square values
+                        // greater than 1.0. Cap it at 1.0f for display purposes.
+                        meanSquare = 1.0f;
+                    }
+
+                    // Calculate energy in dB, in the range [MinEnergy, 0], where MinEnergy < 0
+                    float energy = MinEnergy;
+
+                    if (meanSquare > 0)
+                    {
+                        energy = (float)(10.0 * Math.Log10(meanSquare));
+                    }
+
+                    this.accumulatedSquareSum = 0;
+                    this.accumulatedSampleCount = 0;
+                }
+            }
+            //Add sound array to the unity audio source
+            AudioClip soundbyte = AudioClip.Create("sample",512,1,16000,false);
+            soundbyte.SetData(audioRecording.ToArray(),0);
+            unityAudioSource.clip = soundbyte;
+
+            AnalyzeSound();
+        }
     }
 
     public Vector3 SyncSoundSource;
-    // Update is called once per frame
 
     public bool record = false;
     public float recordingTime = 2;
 
-    void Update() {
-        if (reader != null)
-        {
-            Debug.Log("Got a reader!");
-        }
-    }
 
-    public List<float> audioRecording; 
+    public List<float> audioRecording = new List<float>(); 
 
     /// <summary>
     /// Handles the audio frame data arriving from the sensor
@@ -276,6 +353,7 @@ public class AudioAnalyzer : MonoBehaviour{
         if (this.reader != null)
         {
             // AudioBeamFrameReader is IDisposable
+            audioSource.OpenReader().Dispose();
             this.reader.Dispose();
             this.reader = null;
         }
@@ -285,6 +363,7 @@ public class AudioAnalyzer : MonoBehaviour{
             this.kinectSensor.Close();
             this.kinectSensor = null;
         }
+        Debug.Log("Shutting down readers");
     }
 
 }
