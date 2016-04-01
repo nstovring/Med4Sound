@@ -165,7 +165,7 @@ public class AudioAnalyzer : MonoBehaviour
             //reader = audioSource.OpenReader();
             //audioSource.PropertyChanged += ReaderOnPropertyChanged;
             audioSource.FrameCaptured += AudioSourceOnFrameCaptured;
-            audioSource.OpenReader().FrameArrived += ReaderOnFrameArrived;
+            reader.FrameArrived += ReaderOnFrameArrived;
             //reader.FrameArrived += ReaderOnFrameArrived;
         }
     }
@@ -177,11 +177,10 @@ public class AudioAnalyzer : MonoBehaviour
 
     private void ReaderOnFrameArrived(object sender, AudioBeamFrameArrivedEventArgs e)
     {
-        if (flagAnalyzingSound)
-            return;
-        flagAnalyzingSound = true;
+        reader.FrameArrived -= ReaderOnFrameArrived;
+        AnalyzeSound();
         Debug.Log("Frame Arrived");
-        flagAnalyzingSound = false;
+        reader.FrameArrived += ReaderOnFrameArrived;
     }
     //flag which signifies if sound analysis is being performed so queued events should be dropped
     private bool flagAnalyzingSound;
