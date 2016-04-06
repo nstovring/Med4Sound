@@ -162,11 +162,8 @@ public class AudioAnalyzer : MonoBehaviour
         {
             // Subscribe to new audio frame arrived events
             Debug.Log("Subscribe event");
-            //reader = audioSource.OpenReader();
-            //audioSource.PropertyChanged += ReaderOnPropertyChanged;
             audioSource.FrameCaptured += AudioSourceOnFrameCaptured;
-            reader.FrameArrived += ReaderOnFrameArrived;
-            //reader.FrameArrived += ReaderOnFrameArrived;
+            reader.FrameArrived += FucksSake;
         }
     }
 
@@ -175,28 +172,85 @@ public class AudioAnalyzer : MonoBehaviour
         Debug.Log("Frame Captured!!");
     }
 
+    private void FucksSake(object sender, AudioBeamFrameArrivedEventArgs e)
+    {
+        Debug.Log("New Frame Arrived");
+        AudioBeamFrameReference frameReference = e.FrameReference;
+        AudioBeamFrameList frameList = (AudioBeamFrameList)frameReference.AcquireBeamFrames();
+        if (frameList != null)
+        {
+            // AudioBeamFrameList is IDisposable
+            using (frameList)
+            {
+            }
+            frameList.Dispose();
+        }
+    }
+
     private void ReaderOnFrameArrived(object sender, AudioBeamFrameArrivedEventArgs e)
     {
-        reader.FrameArrived -= ReaderOnFrameArrived;
-        AnalyzeSound();
-        Debug.Log("Frame Arrived");
-        reader.FrameArrived += ReaderOnFrameArrived;
+        Debug.Log("New Frame Arrived");
+        AudioBeamFrameReference frameReference = e.FrameReference;
+        AudioBeamFrameList frameList = (AudioBeamFrameList)frameReference.AcquireBeamFrames();
+        if (frameList != null)
+        {
+            // AudioBeamFrameList is IDisposable
+            using (frameList)
+            {
+                // Only one audio beam is supported. Get the sub frame list for this beam
+                IList<AudioBeamSubFrame> subFrameList = frameList[0].SubFrames;
+                // Loop over all sub frames, extract audio buffer and beam information
+                foreach (AudioBeamSubFrame subFrame in subFrameList)
+                {
+                    // Process audio buffer
+                    subFrame.CopyFrameDataToArray(this.audioBuffer);
+                    for (int i = 0; i < this.audioBuffer.Length; i += BytesPerSample)
+                    {
+                        // Extract the 32-bit IEEE float sample from the byte array
+                        float audioSample = BitConverter.ToSingle(audioBuffer, i);
+                        // add audiosample to array for analysis
+                        audioRecording.Add(audioSample);
+                        this.accumulatedSquareSum += audioSample * audioSample;
+                        ++this.accumulatedSampleCount;
+
+                        if (this.accumulatedSampleCount < SamplesPerColumn)
+                        {
+                            continue;
+                        }
+
+                        float meanSquare = this.accumulatedSquareSum / SamplesPerColumn;
+
+                        if (meanSquare > 1.0f)
+                        {
+                            // A loud audio source right next to the sensor may result in mean square values
+                            // greater than 1.0. Cap it at 1.0f for display purposes.
+                            meanSquare = 1.0f;
+                        }
+
+                        // Calculate energy in dB, in the range [MinEnergy, 0], where MinEnergy < 0
+                        float energy = MinEnergy;
+
+                        if (meanSquare > 0)
+                        {
+                            energy = (float)(10.0 * Math.Log10(meanSquare));
+                        }
+
+                        this.accumulatedSquareSum = 0;
+                        this.accumulatedSampleCount = 0;
+                    }
+                }
+                //Add sound array to the unity audio source
+                unityAudioSource.clip.SetData(audioRecording.ToArray(), 0);
+                AnalyzeSound();
+            }
+        }
     }
-    //flag which signifies if sound analysis is being performed so queued events should be dropped
-    private bool flagAnalyzingSound;
 
     private AudioBeamFrameArrivedEventArgs eventArgs = null;
 
     public void Update()
     {
-        if (eventArgs != null)
-        {
-            Debug.Log(eventArgs.FrameReference.AcquireBeamFrames()[0].AudioBeam.BeamAngle);
-        }
-        if (Input.GetKeyDown(KeyCode.A))
-        {
-            GetSound(reader.AcquireLatestBeamFrames());
-        }
+      
     }
 
     private void GetSound(IList<AudioBeamFrame> frameList)
@@ -346,6 +400,72 @@ public class AudioAnalyzer : MonoBehaviour
             i++;
         }
     }
+
+
+    /// <summary>
+    /// Handles the audio frame data arriving from the sensor
+    /// </summary>
+    /// <param name="sender">object sending the event</param>
+    /// <param name="e">event arguments</param>
+    private void Reader_NewFrameArrived(object sender, AudioBeamFrameArrivedEventArgs e)
+    {
+        AudioBeamFrameReference frameReference = e.FrameReference;
+        AudioBeamFrameList frameList = (AudioBeamFrameList) frameReference.AcquireBeamFrames();
+        Debug.Log("New Frame Arrived");
+        if (frameList != null)
+        {
+            // AudioBeamFrameList is IDisposable
+            using (frameList)
+            {
+                // Only one audio beam is supported. Get the sub frame list for this beam
+                IList<AudioBeamSubFrame> subFrameList = frameList[0].SubFrames;
+                // Loop over all sub frames, extract audio buffer and beam information
+                foreach (AudioBeamSubFrame subFrame in subFrameList)
+                {
+                    // Process audio buffer
+                    subFrame.CopyFrameDataToArray(this.audioBuffer);
+                    for (int i = 0; i < this.audioBuffer.Length; i += BytesPerSample)
+                    {
+                        // Extract the 32-bit IEEE float sample from the byte array
+                        float audioSample = BitConverter.ToSingle(audioBuffer, i);
+                        // add audiosample to array for analysis
+                        audioRecording.Add(audioSample);
+                        this.accumulatedSquareSum += audioSample * audioSample;
+                        ++this.accumulatedSampleCount;
+
+                        if (this.accumulatedSampleCount < SamplesPerColumn)
+                        {
+                            continue;
+                        }
+
+                        float meanSquare = this.accumulatedSquareSum / SamplesPerColumn;
+
+                        if (meanSquare > 1.0f)
+                        {
+                            // A loud audio source right next to the sensor may result in mean square values
+                            // greater than 1.0. Cap it at 1.0f for display purposes.
+                            meanSquare = 1.0f;
+                        }
+
+                        // Calculate energy in dB, in the range [MinEnergy, 0], where MinEnergy < 0
+                        float energy = MinEnergy;
+
+                        if (meanSquare > 0)
+                        {
+                            energy = (float)(10.0 * Math.Log10(meanSquare));
+                        }
+
+                        this.accumulatedSquareSum = 0;
+                        this.accumulatedSampleCount = 0;
+                    }
+                }
+                //Add sound array to the unity audio source
+                unityAudioSource.clip.SetData(audioRecording.ToArray(), 0);
+                AnalyzeSound();
+            }
+        }
+    }
+
 
     void OnApplicationQuit()
     {

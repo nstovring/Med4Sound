@@ -1,6 +1,8 @@
 using RootSystem = System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Diagnostics;
+
 namespace Windows.Kinect
 {
     //
@@ -68,6 +70,7 @@ namespace Windows.Kinect
         private static extern int Windows_Kinect_AudioBeamFrameReference_AcquireBeamFrames(RootSystem.IntPtr pNative, [RootSystem.Runtime.InteropServices.Out] RootSystem.IntPtr[] outCollection, int outCollectionSize);
         public RootSystem.Collections.Generic.IList<Windows.Kinect.AudioBeamFrame> AcquireBeamFrames()
         {
+            //RootSystem.Console.pr("Get me sum beamFrames bitch!");
             if (_pNative == RootSystem.IntPtr.Zero)
             {
                 throw new RootSystem.ObjectDisposedException("AudioBeamFrameReference");
@@ -75,10 +78,11 @@ namespace Windows.Kinect
 
             int outCollectionSize = Windows_Kinect_AudioBeamFrameReference_AcquireBeamFrames_Length(_pNative);
             var outCollection = new RootSystem.IntPtr[outCollectionSize];
-            var managedCollection = new Windows.Kinect.AudioBeamFrame[outCollectionSize];
+            IList<AudioBeamFrame> managedCollection = new Windows.Kinect.AudioBeamFrame[outCollectionSize];
 
             outCollectionSize = Windows_Kinect_AudioBeamFrameReference_AcquireBeamFrames(_pNative, outCollection, outCollectionSize);
             Helper.ExceptionHelper.CheckLastError();
+
             for(int i=0;i<outCollectionSize;i++)
             {
                 if(outCollection[i] == RootSystem.IntPtr.Zero)
