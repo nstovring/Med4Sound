@@ -163,7 +163,7 @@ public class AudioAnalyzer : MonoBehaviour
             // Subscribe to new audio frame arrived events
             Debug.Log("Subscribe event");
             audioSource.FrameCaptured += AudioSourceOnFrameCaptured;
-            reader.FrameArrived += FucksSake;
+            reader.FrameArrived += audioBeamFrameReader_FrameArrived;
         }
     }
 
@@ -185,18 +185,42 @@ public class AudioAnalyzer : MonoBehaviour
             }
             frameList.Dispose();
         }
+        frameList.Dispose();
+    }
+
+    void audioBeamFrameReader_FrameArrived(object sender, AudioBeamFrameArrivedEventArgs args)
+    {
+        //reader.FrameArrived -= audioBeamFrameReader_FrameArrived;
+        Debug.Log("plz");
+        using (var audioFrame = args.FrameReference.AcquireBeamFrames() as AudioBeamFrameList)
+        {
+            Debug.Log("using");
+            if (audioFrame == null)
+            {
+                return;
+            }
+            audioFrame[0].Dispose();
+            audioFrame.Dispose();
+        }
+        Debug.Log("Something happened?");
+        //reader.FrameArrived += audioBeamFrameReader_FrameArrived;
     }
 
     private void ReaderOnFrameArrived(object sender, AudioBeamFrameArrivedEventArgs e)
     {
         Debug.Log("New Frame Arrived");
         AudioBeamFrameReference frameReference = e.FrameReference;
-        AudioBeamFrameList frameList = (AudioBeamFrameList)frameReference.AcquireBeamFrames();
+        AudioBeamFrameList frameList = frameReference.AcquireBeamFrames() as AudioBeamFrameList;
+        frameList.Dispose();
+        return;
+        //frameList[0].AudioBeam
         if (frameList != null)
         {
+            Debug.Log("Framelist exists");
             // AudioBeamFrameList is IDisposable
             using (frameList)
             {
+                Debug.Log("Using frameList");
                 // Only one audio beam is supported. Get the sub frame list for this beam
                 IList<AudioBeamSubFrame> subFrameList = frameList[0].SubFrames;
                 // Loop over all sub frames, extract audio buffer and beam information
@@ -239,9 +263,12 @@ public class AudioAnalyzer : MonoBehaviour
                         this.accumulatedSampleCount = 0;
                     }
                 }
+                frameList.Dispose();
+                Debug.Log("Dispose of framelist");
+                Debug.Log("Analyze Sound");
                 //Add sound array to the unity audio source
-                unityAudioSource.clip.SetData(audioRecording.ToArray(), 0);
-                AnalyzeSound();
+                //unityAudioSource.clip.SetData(audioRecording.ToArray(), 0);
+                //AnalyzeSound();
             }
         }
     }

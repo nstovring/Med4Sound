@@ -2,6 +2,10 @@ using System.Collections;
 using RootSystem = System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Diagnostics;
+using UnityEngine;
+using Debug = UnityEngine.Debug;
+
 namespace Windows.Kinect
 {
     //
@@ -67,9 +71,10 @@ namespace Windows.Kinect
         {
             if (_pNative == RootSystem.IntPtr.Zero)
             {
+                Debug.Log("Not being disposed");
                 return;
             }
-
+            Debug.Log("Disposing");
             Dispose(true);
             RootSystem.GC.SuppressFinalize(this);
         }

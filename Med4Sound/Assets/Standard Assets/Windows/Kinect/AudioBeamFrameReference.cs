@@ -2,6 +2,8 @@ using RootSystem = System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
+using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace Windows.Kinect
 {
@@ -64,13 +66,13 @@ namespace Windows.Kinect
 
 
         // Public Methods
-        [RootSystem.Runtime.InteropServices.DllImport("KinectUnityAddin", CallingConvention=RootSystem.Runtime.InteropServices.CallingConvention.Cdecl, SetLastError=true)]
+        [RootSystem.Runtime.InteropServices.DllImport("KinectUnityAddin", CallingConvention = RootSystem.Runtime.InteropServices.CallingConvention.Cdecl, SetLastError = true)]
         private static extern int Windows_Kinect_AudioBeamFrameReference_AcquireBeamFrames_Length(RootSystem.IntPtr pNative);
-        [RootSystem.Runtime.InteropServices.DllImport("KinectUnityAddin", CallingConvention=RootSystem.Runtime.InteropServices.CallingConvention.Cdecl, SetLastError=true)]
+        [RootSystem.Runtime.InteropServices.DllImport("KinectUnityAddin", CallingConvention = RootSystem.Runtime.InteropServices.CallingConvention.Cdecl, SetLastError = true)]
         private static extern int Windows_Kinect_AudioBeamFrameReference_AcquireBeamFrames(RootSystem.IntPtr pNative, [RootSystem.Runtime.InteropServices.Out] RootSystem.IntPtr[] outCollection, int outCollectionSize);
         public RootSystem.Collections.Generic.IList<Windows.Kinect.AudioBeamFrame> AcquireBeamFrames()
         {
-            //RootSystem.Console.pr("Get me sum beamFrames bitch!");
+
             if (_pNative == RootSystem.IntPtr.Zero)
             {
                 throw new RootSystem.ObjectDisposedException("AudioBeamFrameReference");
@@ -78,14 +80,14 @@ namespace Windows.Kinect
 
             int outCollectionSize = Windows_Kinect_AudioBeamFrameReference_AcquireBeamFrames_Length(_pNative);
             var outCollection = new RootSystem.IntPtr[outCollectionSize];
-            IList<AudioBeamFrame> managedCollection = new Windows.Kinect.AudioBeamFrame[outCollectionSize];
+            var managedCollection = new Windows.Kinect.AudioBeamFrame[outCollectionSize];
 
             outCollectionSize = Windows_Kinect_AudioBeamFrameReference_AcquireBeamFrames(_pNative, outCollection, outCollectionSize);
             Helper.ExceptionHelper.CheckLastError();
 
-            for(int i=0;i<outCollectionSize;i++)
+            for (int i = 0; i < outCollectionSize; i++)
             {
-                if(outCollection[i] == RootSystem.IntPtr.Zero)
+                if (outCollection[i] == RootSystem.IntPtr.Zero)
                 {
                     continue;
                 }
@@ -96,6 +98,46 @@ namespace Windows.Kinect
             }
             return managedCollection;
         }
+
+        //// Public Methods
+        //[RootSystem.Runtime.InteropServices.DllImport("KinectUnityAddin", CallingConvention = RootSystem.Runtime.InteropServices.CallingConvention.Cdecl, SetLastError = true)]
+        //private static extern int Windows_Kinect_AudioBeamFrameReference_AcquireBeamFrames_Length(RootSystem.IntPtr pNative);
+        //[RootSystem.Runtime.InteropServices.DllImport("KinectUnityAddin", CallingConvention = RootSystem.Runtime.InteropServices.CallingConvention.Cdecl, SetLastError = true)]
+        //private static extern int Windows_Kinect_AudioBeamFrameReference_AcquireBeamFrames(RootSystem.IntPtr pNative, [RootSystem.Runtime.InteropServices.Out] RootSystem.IntPtr[] outCollection, int outCollectionSize);
+        //public AudioBeamFrameList AcquireBeamFrames()
+        //{
+
+        //    if (_pNative == RootSystem.IntPtr.Zero)
+        //    {
+        //        throw new RootSystem.ObjectDisposedException("AudioBeamFrameReference");
+        //    }
+
+        //    int outCollectionSize = Windows_Kinect_AudioBeamFrameReference_AcquireBeamFrames_Length(_pNative);
+        //    var outCollection = new RootSystem.IntPtr[outCollectionSize];
+
+        //    AudioBeamFrameList managedCollection = new AudioBeamFrameList(_pNative);
+        //    //managedCollection. = new AudioBeamFrame[outCollectionSize];
+        //    //AudioBeamFrameList managedCollection = new AudioBeamFrameList(_pNative);
+
+        //    outCollectionSize = Windows_Kinect_AudioBeamFrameReference_AcquireBeamFrames(_pNative, outCollection, outCollectionSize);
+
+        //    Helper.ExceptionHelper.CheckLastError();
+        //    //Debug.Log(outCollectionSize);
+        //    for (int i = 0; i < outCollectionSize; i++)
+        //    {
+        //        if (outCollection[i] == RootSystem.IntPtr.Zero)
+        //        {
+        //            continue;
+        //        }
+
+        //        var obj = Helper.NativeObjectCache.CreateOrGetObject<Windows.Kinect.AudioBeamFrame>(outCollection[i], n => new Windows.Kinect.AudioBeamFrame(n));
+        //        //managedCollection.Add(obj);
+
+        //        managedCollection[i] = obj;
+        //    }
+        //    //Debug.Log(managedCollection.Count);
+        //    return managedCollection;
+        //}
 
         private void __EventCleanup()
         {
