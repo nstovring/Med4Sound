@@ -1,3 +1,4 @@
+using System.Collections;
 using RootSystem = System;
 using System.Linq;
 using System.Collections.Generic;
@@ -6,7 +7,7 @@ namespace Windows.Kinect
     //
     // Windows.Kinect.AudioBeamFrameList
     //
-    public sealed partial class AudioBeamFrameList : RootSystem.IDisposable, Helper.INativeWrapper
+    public sealed partial class AudioBeamFrameList : IList<AudioBeamFrame>, RootSystem.IDisposable, Helper.INativeWrapper
 
     {
         internal RootSystem.IntPtr _pNative;
@@ -19,9 +20,19 @@ namespace Windows.Kinect
             Windows_Kinect_AudioBeamFrameList_AddRefObject(ref _pNative);
         }
 
+        public IEnumerator<AudioBeamFrame> GetEnumerator()
+        {
+            return beamFrames.GetEnumerator();
+        }
+
         ~AudioBeamFrameList()
         {
             Dispose(false);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
         [RootSystem.Runtime.InteropServices.DllImport("KinectUnityAddin", CallingConvention=RootSystem.Runtime.InteropServices.CallingConvention.Cdecl, SetLastError=true)]
@@ -65,6 +76,64 @@ namespace Windows.Kinect
 
         private void __EventCleanup()
         {
+        }
+        // Array which contains beamFrames
+        private List<AudioBeamFrame> beamFrames;
+        //Bonus code from added interface
+
+        public void Add(AudioBeamFrame item)
+        {
+            beamFrames.Add(item);
+        }
+
+        public void Clear()
+        {
+            beamFrames.Clear();
+        }
+
+        public bool Contains(AudioBeamFrame item)
+        {
+            return beamFrames.Contains(item);
+            //throw new System.NotImplementedException();
+        }
+
+        public void CopyTo(AudioBeamFrame[] array, int arrayIndex)
+        {
+            beamFrames.CopyTo(array, arrayIndex);
+        }
+
+        public bool Remove(AudioBeamFrame item)
+        {
+            return beamFrames.Remove(item);
+        }
+
+        public int Count
+        {
+            get { return beamFrames.Count; } 
+        }
+
+        public bool IsReadOnly {
+            get { return false;}
+        }
+        public int IndexOf(AudioBeamFrame item)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void Insert(int index, AudioBeamFrame item)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void RemoveAt(int index)
+        {
+            beamFrames.RemoveAt(index);
+        }
+
+        public AudioBeamFrame this[int index]
+        {
+            get { return beamFrames[index]; }
+            set { beamFrames[index] = value; }
         }
     }
 
