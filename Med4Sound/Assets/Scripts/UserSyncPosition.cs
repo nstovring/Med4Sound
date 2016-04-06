@@ -57,7 +57,7 @@ public class UserSyncPosition : NetworkBehaviour
 
         if (kinect.IsAvailable)
         {
-            //CmdProvideBeamAngleToServer(kinect.AudioSource.AudioBeams[0].BeamAngle);
+            CmdProvideBeamAngleToServer(kinect.AudioSource.AudioBeams[0].BeamAngle);
         }
         //If the L key is pressed on the keyboard call the method LogPosition
         if (Input.GetKeyUp(KeyCode.L))

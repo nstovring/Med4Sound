@@ -1,6 +1,8 @@
 using RootSystem = System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Diagnostics;
+
 namespace Windows.Kinect
 {
     //
@@ -127,7 +129,6 @@ namespace Windows.Kinect
             add
             {
                 Helper.EventPump.EnsureInitialized();
-
                 Windows_Kinect_AudioBeamFrameArrivedEventArgs_Delegate_callbacks.TryAddDefault(_pNative);
                 var callbackList = Windows_Kinect_AudioBeamFrameArrivedEventArgs_Delegate_callbacks[_pNative];
                 lock (callbackList)
