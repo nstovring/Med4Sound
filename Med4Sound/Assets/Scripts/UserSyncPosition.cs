@@ -75,7 +75,7 @@ public class UserSyncPosition : NetworkBehaviour
         {
             if (isGivenJoint && hasAuthority)
             {
-                TransmitPosition(jointNum);
+                //TransmitPosition(jointNum);
             }
             else TransmitPosition();
         }
