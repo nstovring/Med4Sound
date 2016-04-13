@@ -144,10 +144,10 @@ public class skeletonCreator : NetworkBehaviour
             Cmd_SpawnObjects();
         }
     }
-    [ClientCallback]
+    
     void FixedUpdate()
     {
-        if (hasAuthority && manager != null)
+        if (hasAuthority && manager != null && isClient)
         {
             playerID = manager.GetUserIdByIndex(0);
             trackedJoints = new List<int>();
@@ -167,16 +167,16 @@ public class skeletonCreator : NetworkBehaviour
                     //Cmd_sendJointPositions(positionsX, positionsY, positionsZ, rotation);
                     Cmd_sendJointPositions(positions, rotation);
                 }
-                if (isServer)
-                {
-                    Rpc_sendJointPositions(positions, rotation);
-                }
             }
         }
         if (manager != null)
         {
             //convertToVector3();
             //applyPosition();
+            if (isServer)
+            {
+                Rpc_sendJointPositions(positions, rotation);
+            }
         }
         applyPosition();
     }
