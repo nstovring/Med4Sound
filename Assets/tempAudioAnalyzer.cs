@@ -166,6 +166,7 @@ public class tempAudioAnalyzer : MonoBehaviour {
         {
             
             unityAudioSource.Play();
+            AnalyzeSound();
         }
 
         if (!Recorded && reader != null)
@@ -222,6 +223,7 @@ public class tempAudioAnalyzer : MonoBehaviour {
     float[] spectrum = new float[256];
     private void AnalyzeSound()
     {
+        spectrum = new float[512];
         unityAudioSource.GetSpectrumData(spectrum, 0, FFTWindow.BlackmanHarris);
         int i = 1;
         while (i < spectrum.Length - 1)
