@@ -222,7 +222,6 @@ public class skeletonCreator : NetworkBehaviour
             //Call the initialize method on the userSyncPosition class on the current user
             playerInitialize.Initialize((GetComponent<NetworkIdentity>().netId.Value - 1) + " " + i, rndColor);
             //Spawn the prefab on the server after initialization, enabliing us to call network methods from classes on it
-            NetworkServer.Spawn(joints[i]);
             NetworkServer.SpawnWithClientAuthority(joints[i], connectionToClient);
             //Call the Cmd_changeIdentity method, which recieves The networkidentity netids' value as well as a number from the loop
             playerInitialize.Cmd_ChangeIdentity(rndColor, ("SubUser " + (GetComponent<NetworkIdentity>().netId.Value - 1) + " " + i));
@@ -235,10 +234,6 @@ public class skeletonCreator : NetworkBehaviour
     [ClientRpc]
     void Rpc_SpawnObjects(GameObject[] userGameObjects)
     {
-        foreach (GameObject joint in userGameObjects)
-        {
-            NetworkServer.Spawn(joint);
-        }
 
         //If the client is the localPlayer that is to say refering to its' own instance only
         if (isLocalPlayer)
