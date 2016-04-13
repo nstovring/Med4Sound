@@ -227,7 +227,7 @@ public class OffsetCalculator : NetworkBehaviour {
             {
                 for (int i = 0; i < vectors.GetLength(0); i++)
                 {
-                    GameObject[] skel = skeletonCreators[i].GetComponent<skeletonCreator>().players;
+                    GameObject[] skel = skeletonCreators[i].GetComponent<skeletonCreator>().joints;
                     vectors[i] = new Vector3[2] { skel[commonJoints[i][1]].transform.position - skel[commonJoints[i][0]].transform.position, skel[commonJoints[i][2]].transform.position - skel[commonJoints[i][0]].transform.position };
                 }
                 differentVectorAngles(vectors,2);
@@ -253,7 +253,7 @@ public class OffsetCalculator : NetworkBehaviour {
                 {
                     for (int i = 0; i < vectors.GetLength(0); i++)
                     {
-                        GameObject[] skel = skeletonCreators[i].GetComponent<skeletonCreator>().players;
+                        GameObject[] skel = skeletonCreators[i].GetComponent<skeletonCreator>().joints;
                         allPlayers[i] = skel;
                         vectors[i] = new Vector3[2] { skel[jointsWeWant[1]].transform.position - skel[jointsWeWant[0]].transform.position, skel[jointsWeWant[2]].transform.position - skel[jointsWeWant[0]].transform.position };
                     }
