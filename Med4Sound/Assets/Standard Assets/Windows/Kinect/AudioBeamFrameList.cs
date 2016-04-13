@@ -43,7 +43,7 @@ namespace Windows.Kinect
         private static extern void Windows_Kinect_AudioBeamFrameList_ReleaseObject(ref RootSystem.IntPtr pNative);
         [RootSystem.Runtime.InteropServices.DllImport("KinectUnityAddin", CallingConvention=RootSystem.Runtime.InteropServices.CallingConvention.Cdecl, SetLastError=true)]
         private static extern void Windows_Kinect_AudioBeamFrameList_AddRefObject(ref RootSystem.IntPtr pNative);
-        private void Dispose(bool disposing)
+        public void Dispose(bool disposing)
         {
             if (_pNative == RootSystem.IntPtr.Zero)
             {
@@ -59,6 +59,7 @@ namespace Windows.Kinect
                 Windows_Kinect_AudioBeamFrameList_Dispose(_pNative);
             }
                 Windows_Kinect_AudioBeamFrameList_ReleaseObject(ref _pNative);
+            
 
             _pNative = RootSystem.IntPtr.Zero;
         }
@@ -69,6 +70,7 @@ namespace Windows.Kinect
         private static extern void Windows_Kinect_AudioBeamFrameList_Dispose(RootSystem.IntPtr pNative);
         public void Dispose()
         {
+            Debug.Log("Dispose Damn You!");
             if (_pNative == RootSystem.IntPtr.Zero)
             {
                 Debug.Log("Not being disposed");

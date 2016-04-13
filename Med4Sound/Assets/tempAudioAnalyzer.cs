@@ -1,30 +1,15 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections;
-using Windows.Kinect;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using Windows.Data;
+using Windows.Kinect;
 
-public class AudioAnalyzer : MonoBehaviour
-{
-
-    Windows.Kinect.AudioSource aSource1;
-    Windows.Kinect.AudioSource aSource2;
-
-    public UnityEngine.AudioSource unityAudioSource;
-    public GameObject AudioGameObject;
-
-    /// <summary>
-    /// Number of samples captured from Kinect audio stream each millisecond.
-    /// </summary>
-    private const int SamplesPerMillisecond = 16;
-
+public class tempAudioAnalyzer : MonoBehaviour {
     /// <summary>
     /// Number of bytes in each Kinect audio stream sample (32-bit IEEE float).
     /// </summary>
-    private const int BytesPerSample = sizeof (float);
+    private const int BytesPerSample = sizeof(float);
 
     /// <summary>
     /// Number of audio samples represented by each column of pixels in wave bitmap.
@@ -49,7 +34,7 @@ public class AudioAnalyzer : MonoBehaviour
     /// <summary>
     /// Array of background-color pixels corresponding to an area equal to the size of whole energy bitmap.
     /// </summary>
-    private readonly byte[] backgroundPixels = new byte[EnergyBitmapWidth*EnergyBitmapHeight];
+    private readonly byte[] backgroundPixels = new byte[EnergyBitmapWidth * EnergyBitmapHeight];
 
     /// <summary>
     /// Will be allocated a buffer to hold a single sub frame of audio data read from audio stream.
@@ -62,7 +47,7 @@ public class AudioAnalyzer : MonoBehaviour
     /// stream animation effect, since rendering happens on a different schedule with respect to audio
     /// capture.
     /// </summary>
-    private readonly float[] energy = new float[(uint) (EnergyBitmapWidth*1.25)];
+    private readonly float[] energy = new float[(uint)(EnergyBitmapWidth * 1.25)];
 
     /// <summary>
     /// Object for locking energy buffer to synchronize threads.
@@ -131,75 +116,108 @@ public class AudioAnalyzer : MonoBehaviour
     /// Index of first energy element that has never (yet) been displayed to screen.
     /// </summary>
     private int energyRefreshIndex;
+    private BodyFrameReader _Reader;
+    private float[] audioRecording = new float[2056];
 
-    AudioBeam aBeam;
+    public UnityEngine.AudioSource unityAudioSource;
 
-    private DepthFrameReader dFrameReader;
-    private Windows.Kinect.AudioSource audioSource;
-    // Use this for initialization
+
     void Start()
     {
-        //kinectSensor = KinectSensor.GetDefault();
-        // Get its audio source
-        reader = null;
-        // Open the sensor
-        // Get its audio source
-        audioSource = KinectManager.Instance.GetSensorData().AudioSource;
+        kinectSensor = KinectSensor.GetDefault();
 
+        if (kinectSensor != null)
+        {
+            _Reader = kinectSensor.BodyFrameSource.OpenReader();
+
+
+            if (!kinectSensor.IsOpen)
+            {
+                kinectSensor.Open();
+            }
+
+            //initialize audio reader
+            var audioSource = kinectSensor.AudioSource;
+            this.audioBuffer = new byte[audioSource.SubFrameLengthInBytes];
+            reader = kinectSensor.AudioSource.OpenReader();
+
+        }
+        SoundRecording = new List<float>();
         unityAudioSource = GetComponent<UnityEngine.AudioSource>();
-
-        // Allocate 1024 bytes to hold a single audio sub frame. Duration sub frame 
-        // is 16 msec, the sample rate is 16khz, which means 256 samples per sub frame. 
-        // With 4 bytes per sample, that gives us 1024 bytes.
-        audioBuffer = new byte[audioSource.SubFrameLengthInBytes];
-
-        // Open the reader for the audio frames
-        Debug.Log("Setup stuff");
-
-        reader = audioSource.OpenReader();
-        
+        unityAudioSource.clip = AudioClip.Create("SampleClip", audioRecording.Length, 1,16000,false);
     }
-    
-    public void Update()
+
+    public float SoundRecordingLength = 1f;
+    private List<float> SoundRecording;
+
+    public bool Recorded = false;
+    private AudioClip recordedAudioClip;
+
+    void Update()
     {
-       
-        if (reader != null)
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            Recorded = true;
+            recordedAudioClip = AudioClip.Create("SoundRecording",SoundRecording.Count,1,16000,false);
+            unityAudioSource.clip = recordedAudioClip;
+            unityAudioSource.clip.SetData(SoundRecording.ToArray(), 0);
+        }
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            
+            unityAudioSource.Play();
+        }
+
+        if (!Recorded && reader != null)
         {
             var audioFrames = reader.AcquireLatestBeamFrames();
-
             if (audioFrames != null)
             {
-                Debug.Log("Nay!");
                 // it gets here just fine
                 if (audioFrames[0] != null)
                 {
-                    Debug.Log("Ay!");
                     // it never gives me any audio frames!
                     var subFrameList = audioFrames[0].SubFrames;
                     foreach (AudioBeamSubFrame subFrame in subFrameList)
                     {
-                        ReadSoundByteToArray();
+                        // Process audio buffer
+                        int j = 0;
+                        subFrame.CopyFrameDataToArray(this.audioBuffer);
+                        for (int i = 0; i < this.audioBuffer.Length; i += BytesPerSample)
+                        {
+                            // Extract the 32-bit IEEE float sample from the byte array
+                            float audioSample = BitConverter.ToSingle(audioBuffer, i);
+                            // add audiosample to array for analysis
+                            audioRecording[j] = audioSample;
+                            if (SoundRecordingLength > 0)
+                            {
+                                SoundRecording.Add(audioSample);
+                            }
+                            j++;
+                            this.accumulatedSquareSum += audioSample*audioSample;
+                            ++this.accumulatedSampleCount;
+
+                            if (this.accumulatedSampleCount < SamplesPerColumn)
+                            {
+                                continue;
+                            }
+                        }
+                        //Stuff
+                        if (SoundRecordingLength > 0)
+                        {
+                            SoundRecordingLength -= 0.16f;
+                        }
+
                         Debug.Log("Ey!");
                     }
-                    unityAudioSource.clip.SetData(audioRecording.ToArray(), 0);
                     audioFrames[0].Dispose();
                     audioFrames[0] = null;
+                    unityAudioSource.clip.SetData(audioRecording, 0);
                     AnalyzeSound();
                 }
-                // ((IDisposable)audioFrames).Dispose();
             }
-            // _AudioReader.Dispose();
         }
     }
-
-    public Vector3 SyncSoundSource;
-
-    public bool record = false;
-    public float recordingTime = 2;
-
-    public List<float> audioRecording = new List<float>(); 
-
-   
 
     float[] spectrum = new float[256];
     private void AnalyzeSound()
@@ -216,62 +234,4 @@ public class AudioAnalyzer : MonoBehaviour
         }
     }
 
-    private void ReadSoundByteToArray()
-    {
-        for (int i = 0; i < this.audioBuffer.Length; i += BytesPerSample)
-        {
-            // Extract the 32-bit IEEE float sample from the byte array
-            float audioSample = BitConverter.ToSingle(audioBuffer, i);
-            // add audiosample to array for analysis
-            audioRecording.Add(audioSample);
-            this.accumulatedSquareSum += audioSample*audioSample;
-            ++this.accumulatedSampleCount;
-
-            if (this.accumulatedSampleCount < SamplesPerColumn)
-            {
-                continue;
-            }
-
-            float meanSquare = this.accumulatedSquareSum/SamplesPerColumn;
-
-            if (meanSquare > 1.0f)
-            {
-                // A loud audio source right next to the sensor may result in mean square values
-                // greater than 1.0. Cap it at 1.0f for display purposes.
-                meanSquare = 1.0f;
-            }
-
-            // Calculate energy in dB, in the range [MinEnergy, 0], where MinEnergy < 0
-            float energy = MinEnergy;
-
-            if (meanSquare > 0)
-            {
-                energy = (float) (10.0*Math.Log10(meanSquare));
-            }
-
-            this.accumulatedSquareSum = 0;
-            this.accumulatedSampleCount = 0;
-        }
-    }
-
-    void OnApplicationQuit()
-    {
-        if (this.reader != null)
-        {
-            // AudioBeamFrameReader is IDisposable
-            audioSource.OpenReader().Dispose();
-            this.reader.Dispose();
-            this.reader = null;
-        }
-
-        if (this.kinectSensor != null)
-        {
-            this.kinectSensor.Close();
-            this.kinectSensor = null;
-        }
-        Debug.Log("Shutting down readers");
-    }
-
 }
-
-
