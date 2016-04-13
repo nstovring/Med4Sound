@@ -21,6 +21,7 @@ public class skeletonCreator : NetworkBehaviour
     public Button button2;
     float time;
     float sendRate;
+    float sendTIme;
     Vector3[] positions;
     //SyncList<float> SyncList_positionsX;
     //SyncList<float> SyncList_positionsY;
@@ -147,6 +148,7 @@ public class skeletonCreator : NetworkBehaviour
     
     void FixedUpdate()
     {
+        sendTIme += Time.deltaTime;
         if (hasAuthority && manager != null && isClient)
         {
             playerID = manager.GetUserIdByIndex(0);
@@ -159,7 +161,7 @@ public class skeletonCreator : NetworkBehaviour
                 time = 0;
             }
             time += Time.deltaTime;
-            if (manager.IsUserDetected())
+            if (manager.IsUserDetected() && sendTIme >= sendRate)
             {
                 getJointPositionsAndRotations();
                 if (isClient)
@@ -173,10 +175,14 @@ public class skeletonCreator : NetworkBehaviour
         {
             //convertToVector3();
             //applyPosition();
-            if (isServer)
+            if (isServer && sendTIme >= sendRate)
             {
                 Rpc_sendJointPositions(positions, rotation);
             }
+        }
+        if(sendTIme >= sendRate)
+        {
+            sendTIme = 0;
         }
         applyPosition();
     }
