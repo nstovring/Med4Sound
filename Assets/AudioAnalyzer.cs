@@ -173,6 +173,11 @@ public class AudioAnalyzer : MonoBehaviour
         unityAudioSource.clip = AudioClip.Create("SampleClip", audioRecording.Length, 1, 16000, false);
 
     }
+
+    void MatlabMath()
+    {
+      //  mLabClass.
+    }
     
     public void Update()
     {
@@ -217,7 +222,7 @@ public class AudioAnalyzer : MonoBehaviour
                     audioSignalSample = newSignal.ToList();
                     unityAudioSource.clip = AudioClip.Create("SampleClip", newSignal.Length, 1, 16000, false);
                     unityAudioSource.clip.SetData(newSignal, 0);
-                    spectrum = new float[256];
+                    spectrum = new float[512];
                     unityAudioSource.GetSpectrumData(spectrum, 0, FFTWindow.BlackmanHarris);
 
                     //ApplyFFT();
