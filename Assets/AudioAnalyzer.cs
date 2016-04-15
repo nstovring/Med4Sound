@@ -150,6 +150,9 @@ public class AudioAnalyzer : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        //Make sure the FFT is sampling at the same rate as kinect recording
+        AudioSettings.outputSampleRate = 16000;
+
         //kinectSensor = KinectSensor.GetDefault();
         // Get its audio source
         reader = null;
