@@ -31,8 +31,8 @@ public class skeletonCreator : NetworkBehaviour
     // Use this for initialization
     void Start()
     {
-        //jointAmount = 20;
-        jointAmount = 3;
+        jointAmount = 20;
+        //jointAmount = 3;
         offsetCalculator = OffsetCalculator.offsetCalculator;
         positions = new Vector3[jointAmount];
         joints = new GameObject[jointAmount];
@@ -182,8 +182,8 @@ public class skeletonCreator : NetworkBehaviour
             time += Time.deltaTime;
             if (manager.IsUserDetected() && sendTIme >= sendRate)
             {
-                //getJointPositionsAndRotations();
-                GetSpecificJointPositionsAndRotations();
+                getJointPositionsAndRotations();
+                //GetSpecificJointPositionsAndRotations();
                 if (isClient)
                 {
                     //Cmd_sendJointPositions(positionsX, positionsY, positionsZ, rotation);
