@@ -194,8 +194,8 @@ public class skeletonCreator : NetworkBehaviour
         if (manager != null)
         {
             //convertToVector3();
-            //applyPosition();
-            if (isServer && sendTIme >= sendRate && manager.IsUserDetected())
+            //applyPosition(); && manager.IsUserDetected()
+            if (isServer && sendTIme >= sendRate )
             {
                 Rpc_sendJointPositions(positions, rotation);
             }
