@@ -35,7 +35,7 @@ public class FFTClass : MonoBehaviour
         newSignalA = ZeroPadSIgnal(newSignalA);
         newSignalB = ZeroPadSIgnal(newSignalB);
 
-        audioSignalSample = newSignal.ToList();
+        //audioSignalSample = newSignal.ToList();
 
         //aSource.clip = AudioClip.Create("SampleClip", newSignal.Length, 1, 16000, false);
         //bSource.clip = AudioClip.Create("SampleClip", newSignal.Length, 1, 16000, false);
