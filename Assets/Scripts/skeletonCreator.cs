@@ -31,7 +31,8 @@ public class skeletonCreator : NetworkBehaviour
     // Use this for initialization
     void Start()
     {
-        jointAmount = 20;
+        //jointAmount = 20;
+        jointAmount = 3;
         offsetCalculator = OffsetCalculator.offsetCalculator;
         positions = new Vector3[jointAmount];
         joints = new GameObject[jointAmount];
@@ -74,6 +75,25 @@ public class skeletonCreator : NetworkBehaviour
             manager = KinectManager.Instance;
         }
     }
+    void GetSpecificJointPositionsAndRotations()
+    {
+        if (manager != null)
+        {
+            if (manager.IsUserDetected())
+            {
+                positions = new Vector3[3];
+                Quaternion userOrientation = manager.GetJointOrientation(manager.GetUserIdByIndex(0), 0, false);
+                rotation = userOrientation.eulerAngles;
+                positions[0] = manager.GetUserBodyData(manager.GetUserIdByIndex(0)).joint[0].position;
+                positions[1] = manager.GetUserBodyData(manager.GetUserIdByIndex(0)).joint[4].position;
+                positions[2] = manager.GetUserBodyData(manager.GetUserIdByIndex(0)).joint[8].position;
+            }
+        }
+        else
+        {
+            manager = KinectManager.Instance;
+        }
+    }
     /*[Command]
     void Cmd_sendJointPositions(SyncList<float> positionsX, SyncList<float> positionsY, SyncList<float> positionsZ, Vector3 rotation)
     {
@@ -92,7 +112,6 @@ public class skeletonCreator : NetworkBehaviour
     {
         Debug.Log("recieving joints");
         this.positions = positions;
-        this.rotation = rotation;
     }
     /*void convertToVector3()
     {
@@ -163,7 +182,8 @@ public class skeletonCreator : NetworkBehaviour
             time += Time.deltaTime;
             if (manager.IsUserDetected() && sendTIme >= sendRate)
             {
-                getJointPositionsAndRotations();
+                //getJointPositionsAndRotations();
+                GetSpecificJointPositionsAndRotations();
                 if (isClient)
                 {
                     //Cmd_sendJointPositions(positionsX, positionsY, positionsZ, rotation);
@@ -175,7 +195,7 @@ public class skeletonCreator : NetworkBehaviour
         {
             //convertToVector3();
             //applyPosition();
-            if (isServer && sendTIme >= sendRate)
+            if (isServer && sendTIme >= sendRate && manager.IsUserDetected())
             {
                 Rpc_sendJointPositions(positions, rotation);
             }
