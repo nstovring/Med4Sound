@@ -24,7 +24,7 @@ public class FFTClass : MonoBehaviour
 
     private List<float> audioSignalSample;
 
-    void FFTtesting(List<float> _audioSignalSample)
+    void FFTtesting()
     {
         float[] newSignalA = new float[aSource.clip.samples * aSource.clip.channels];
         float[] newSignalB = new float[bSource.clip.samples * bSource.clip.channels];
@@ -47,8 +47,10 @@ public class FFTClass : MonoBehaviour
         bSource.Play();
 
         spectrumA = new float[256];
-        aSource.GetSpectrumData(spectrumA, 0, FFTWindow.BlackmanHarris);
+        spectrumB = new float[256];
 
+        aSource.GetSpectrumData(spectrumA, 0, FFTWindow.BlackmanHarris);
+        aSource.GetSpectrumData(spectrumB, 0, FFTWindow.BlackmanHarris);
     }
 
     void FFT(List<float> _audioSignalSample)
@@ -71,6 +73,23 @@ public class FFTClass : MonoBehaviour
     }
 
     private float[] spectrumA = new float[256];
+    private float[] spectrumB = new float[256];
+
+
+    private void DisplayFFT()
+    {
+        int i = 1;
+        while (i < spectrumA.Length - 1)
+        {
+            Debug.DrawLine(new Vector3(i - 1, spectrumA[i] + 10, 0), new Vector3(i, spectrumA[i + 1] + 10, 0), Color.red);
+            Debug.DrawLine(new Vector3(i - 1, Mathf.Log(spectrumA[i - 1]) + 10, 2), new Vector3(i, Mathf.Log(spectrumA[i]) + 10, 2), Color.cyan);
+            Debug.DrawLine(new Vector3(Mathf.Log(i - 1), spectrumA[i - 1] - 10, 1), new Vector3(Mathf.Log(i), spectrumA[i] - 10, 1), Color.green);
+            Debug.DrawLine(new Vector3(Mathf.Log(i - 1), Mathf.Log(spectrumA[i - 1]), 3), new Vector3(Mathf.Log(i), Mathf.Log(spectrumA[i]), 3), Color.yellow);
+            i++;
+        }
+    }
+
+
 
     public float[] ZeroPadSIgnal(float[] signalFloats)
     {
