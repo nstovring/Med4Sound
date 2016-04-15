@@ -180,7 +180,7 @@ public class skeletonCreator : NetworkBehaviour
                 time = 0;
             }
             time += Time.deltaTime;
-            if (manager.IsUserDetected() && sendTIme >= sendRate)
+            if (sendTIme >= sendRate)
             {
                 getJointPositionsAndRotations();
                 //GetSpecificJointPositionsAndRotations();
