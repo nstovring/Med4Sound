@@ -50,15 +50,15 @@ public class UserSyncPosition : NetworkBehaviour
     [SyncVar]public int jointNum = -1;
 
     [SyncVar]public float beamAngle;
+    private KinectSensor kinect;
     // Update is called once per frame
     void Update()
     {
-        KinectSensor kinect = KinectSensor.GetDefault();
+        kinect = KinectSensor.GetDefault();
 
-        if (kinect.IsAvailable)
-        {
-            //CmdProvideBeamAngleToServer(kinect.AudioSource.AudioBeams[0].BeamAngle);
-        }
+        //if (kinect.IsAvailable)
+        //{
+        //}
         //If the L key is pressed on the keyboard call the method LogPosition
         if (Input.GetKeyUp(KeyCode.L))
         {
@@ -290,6 +290,7 @@ public class UserSyncPosition : NetworkBehaviour
             if (timePassed >= syncStep)
             {
                 CmdProvidePositionToServer(myTransform.position, myTransform.rotation.eulerAngles);
+                CmdProvideBeamAngleToServer(kinect.AudioSource.AudioBeams[0].BeamAngle);
                 timePassed = 0;
             }
             else
