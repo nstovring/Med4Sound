@@ -222,10 +222,11 @@ public class AudioAnalyzer : MonoBehaviour
                     audioSignalSample = newSignal.ToList();
                     unityAudioSource.clip = AudioClip.Create("SampleClip", newSignal.Length, 1, 16000, false);
                     unityAudioSource.clip.SetData(newSignal, 0);
+                    unityAudioSource.Play();
                     spectrum = new float[512];
                     unityAudioSource.GetSpectrumData(spectrum, 0, FFTWindow.BlackmanHarris);
 
-                    //ApplyFFT();
+                    ApplyFFT();
                 }
             }
         }
