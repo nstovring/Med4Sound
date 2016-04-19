@@ -178,7 +178,10 @@ public class UserSyncPosition : NetworkBehaviour
                 MoveWithUser();
                 OrientWithUser();
                 CmdProvidePositionToServer(myTransform.position, myTransform.rotation.eulerAngles);
-                CmdProvideBeamAngleToServer(kinect.AudioSource.AudioBeams[0].BeamAngle); // MOve later!
+                if (kinect.AudioSource.AudioBeams[0].BeamAngleConfidence >= 0.8)
+                {
+                    CmdProvideBeamAngleToServer(kinect.AudioSource.AudioBeams[0].BeamAngle); // MOve later!
+                }
             }
         }
     }
@@ -210,7 +213,10 @@ public class UserSyncPosition : NetworkBehaviour
                 MoveWithUser(manager.bodyFrame.bodyData[user1BodyIndex].joint[jointNum].position);
                 OrientWithUser();
                 CmdProvidePositionToServer(myTransform.position, myTransform.rotation.eulerAngles);
-                CmdProvideBeamAngleToServer(kinect.AudioSource.AudioBeams[0].BeamAngle); // MOve later!
+                if (kinect.AudioSource.AudioBeams[0].BeamAngleConfidence >= 0.8)
+                {
+                    CmdProvideBeamAngleToServer(kinect.AudioSource.AudioBeams[0].BeamAngle); // MOve later!
+                }
             }
         }
     }
@@ -275,6 +281,10 @@ public class UserSyncPosition : NetworkBehaviour
             if (timePassed >= syncStep)
             {
                 CmdProvidePositionToServer(myTransform.position, myTransform.rotation.eulerAngles);
+                if (kinect.AudioSource.AudioBeams[0].BeamAngleConfidence >= 0.8)
+                {
+                    CmdProvideBeamAngleToServer(kinect.AudioSource.AudioBeams[0].BeamAngle); // MOve later!
+                }
                 timePassed = 0;
             }
             else
@@ -297,7 +307,10 @@ public class UserSyncPosition : NetworkBehaviour
             if (timePassed >= syncStep)
             {
                 CmdProvidePositionToServer(myTransform.position, myTransform.rotation.eulerAngles);
-                CmdProvideBeamAngleToServer(kinect.AudioSource.AudioBeams[0].BeamAngle);
+                if (kinect.AudioSource.AudioBeams[0].BeamAngleConfidence >= 0.8)
+                {
+                    CmdProvideBeamAngleToServer(kinect.AudioSource.AudioBeams[0].BeamAngle); // MOve later!
+                }
                 timePassed = 0;
             }
             else
