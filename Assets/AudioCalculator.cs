@@ -21,10 +21,11 @@ public class AudioCalculator : NetworkBehaviour
     public string trackingType = "AudioTracking";
     // Use this for initialization
     void Start () {
+        offsetCalculator = OffsetCalculator.offsetCalculator;
+
         if (Network.isServer)
         {
             kinectSensor = KinectSensor.GetDefault();
-            offsetCalculator = OffsetCalculator.offsetCalculator;
             //kinectSensor.AudioSource.PropertyChanged += UpdateAudioTrackingPosition;
         }
     }
@@ -40,6 +41,7 @@ public class AudioCalculator : NetworkBehaviour
         }
         if (offsetCalculator != null && offsetCalculator.players.Length > 0)
         {
+            Debug.Log("Eat shit & die");
             float angle1 = Mathf.Rad2Deg * offsetCalculator.players[0].GetComponent<UserSyncPosition>().beamAngle;
             float angle2 = Mathf.Rad2Deg * offsetCalculator.players[1].GetComponent<UserSyncPosition>().beamAngle;
 
