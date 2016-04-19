@@ -24,6 +24,7 @@ public class AudioCalculator : NetworkBehaviour
         if (Network.isServer)
         {
             kinectSensor = KinectSensor.GetDefault();
+            offsetCalculator = OffsetCalculator.offsetCalculator;
             //kinectSensor.AudioSource.PropertyChanged += UpdateAudioTrackingPosition;
         }
     }
@@ -42,11 +43,11 @@ public class AudioCalculator : NetworkBehaviour
             float angle1 = Mathf.Rad2Deg * offsetCalculator.players[0].GetComponent<UserSyncPosition>().beamAngle;
             float angle2 = Mathf.Rad2Deg * offsetCalculator.players[1].GetComponent<UserSyncPosition>().beamAngle;
 
-            if (angle1 <= angle2 + offsetCalculator.rotationalOffset.y)
-            {
-                return;
+            //if (angle1 <= angle2 + offsetCalculator.rotationalOffset.y)
+            //{
+            //    return;
 
-            }
+            //}
             Vector3 interSectionPoint = offsetCalculator.vectorIntersectionPoint(angle1, angle2);
             TrackedVector3 = interSectionPoint;
             AudioTrackedGameObject.transform.position = TrackedVector3;
