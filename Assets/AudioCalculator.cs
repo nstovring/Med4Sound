@@ -18,7 +18,7 @@ public class AudioCalculator : NetworkBehaviour
     /// </summary>
     private KinectSensor kinectSensor = null;
 
-    public string logInput = "AudioTracking_iteration1";
+    public string trackingType = "AudioTracking";
     // Use this for initialization
     void Start () {
         if (Network.isServer)
@@ -54,7 +54,7 @@ public class AudioCalculator : NetworkBehaviour
 
         if (Input.GetKeyDown(KeyCode.L))
         {
-            Logger.instance.LogData(logInput, TrackedVector3, 1.ToString() , 0);
+            Logger.instance.LogData(trackingType, TrackedVector3, 1.ToString() , 0);
         }
     }
 
