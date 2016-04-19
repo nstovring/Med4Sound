@@ -36,7 +36,7 @@ public class skeletonCreator : NetworkBehaviour
         offsetCalculator = OffsetCalculator.offsetCalculator;
         positions = new Vector3[jointAmount];
         joints = new GameObject[jointAmount];
-        sendRate = 0.1f;
+        sendRate = 0f;
         time = 0;
         //spawnObjects();
 
@@ -128,8 +128,9 @@ public class skeletonCreator : NetworkBehaviour
             {
                 for (int i = 0; i < joints.Length; i++)
                 {
-                    
-                    joints[i].transform.position = positions[i];
+                    if (hasAuthority) joints[i].transform.position = positions[i];
+                    else joints[i].transform.position = Quaternion.Euler(offsetCalculator.rotationalOffset) * positions[i] + offsetCalculator.positionalOffset;
+                    //joints[i].transform.position =  positions[i] + offsetCalculator.positionalOffset;
                     OrientWithUser(joints[i]);
                 }
             }

@@ -50,7 +50,8 @@ public class OffsetCalculator : NetworkBehaviour {
         oldCords = new Vector3[2];
         vel = new Vector3[2];
         angles = new float[1];
-
+        rotationalOffset = Vector3.zero;
+        positionalOffset = Vector3.zero;
         //Here the offsetcalculator variable is set to this instance of the script, making other scripts able to easily get this script
         offsetCalculator = this;
         if (velScene)
@@ -237,12 +238,14 @@ public class OffsetCalculator : NetworkBehaviour {
     public void selectedVectorAngles(int[] jointsWeWant)
     {
         skeletonCreators = GameObject.FindGameObjectsWithTag("SkeletonCreator");
+        Debug.Log("Finding skeleton creators, there are + " + skeletonCreators.Length);
         GameObject[][] allPlayers = new GameObject[skeletonCreators.Length][];
         if (skeletonCreators.Length >= 2)
         {
             List<List<int>> commonJoints = new List<List<int>>();
             if(jointsAreTracked(jointsWeWant, commonJoints))
             {
+                Debug.Log("The joints are tracked!");
                 Vector3[][] vectors = new Vector3[skeletonCreators.Length][];
                 foreach (var i in skeletonCreators)
                 {
@@ -251,6 +254,7 @@ public class OffsetCalculator : NetworkBehaviour {
                 commonJoints = findCommonJoints(commonJoints);
                 if (lengthsAreAbove(3, commonJoints))
                 {
+                    Debug.Log("there are three!");
                     for (int i = 0; i < vectors.GetLength(0); i++)
                     {
                         GameObject[] skel = skeletonCreators[i].GetComponent<skeletonCreator>().joints;
@@ -506,6 +510,7 @@ public class OffsetCalculator : NetworkBehaviour {
     }
     public Vector3[] sameVectorAngles(Vector3[][] sortedVectors)
     {
+        Debug.Log("sameVectorAngles is being called!");
         Vector3[] angles = new Vector3[sortedVectors.GetLength(0) - 1];
         if (sortedVectors.GetLength(0) >= 2)
         {
@@ -521,6 +526,7 @@ public class OffsetCalculator : NetworkBehaviour {
                     float[][] m3 = Times3x3(m2, invert3x3(m1));
                     tempAngles[i - 1] = new Vector3(Mathf.Atan2(m3[2][1], m3[2][2]) * Mathf.Rad2Deg, Mathf.Atan2(-m3[2][0], Mathf.Sqrt(Mathf.Pow(m3[2][1], 2) + Mathf.Pow(m3[2][2], 2))) * Mathf.Rad2Deg, Mathf.Atan2(m3[1][0], m3[0][0]) * Mathf.Rad2Deg);
                 }
+                Debug.Log("Things have been converted!");
                 amount++;
                 for (int i = 0; i < angles.Length; i++)
                 {
@@ -537,7 +543,7 @@ public class OffsetCalculator : NetworkBehaviour {
     {
 
         //Debug.Log(number);
-
+        Debug.Log("Things are being refined!");
         Vector3 v3 = Vector3.Cross(sortedVectors[0][0], sortedVectors[0][1]);
         Vector3[] tempArray = timesArray(sortedVectors[1], Quaternion.Euler(Vector3.up * yAngle));
         Vector3 w3 = Vector3.Cross(tempArray[0], tempArray[1]);
@@ -599,9 +605,7 @@ public class OffsetCalculator : NetworkBehaviour {
         if ((d1.z * d2.x - d1.x * d2.z) != 0)
         {
             t = (c.x * d2.z - c.z * d2.x) / (d1.z * d2.x - d1.x * d2.z);
-            Debug.Log("t = " + t);
             intersectionPoint = d1 * t;
-            Debug.Log("intersectionpoint line = " + intersectionPoint);
             intersectionPoint = new Vector3(intersectionPoint.x, 0, intersectionPoint.z);
         }
         return intersectionPoint;
@@ -609,11 +613,8 @@ public class OffsetCalculator : NetworkBehaviour {
     public Vector3 vectorIntersectionPoint(float angle1, float angle2)
     {
         //replace the parameters with the sound angles from kinects
-        //if(rotationalOffset.z < 10)
-        Debug.Log("eat a bit of shit please");
-        if (true)
+        if(rotationalOffset.z < 10)
         {
-            Debug.Log("eat more shit please");
             Quaternion a1 = Quaternion.Euler(0, angle1, 0);
             Quaternion a2 = Quaternion.Euler(0, angle2 + rotationalOffset.y, 0);
             Vector3 d1 = a1 * Vector3.forward;
