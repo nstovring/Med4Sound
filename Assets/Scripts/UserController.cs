@@ -232,7 +232,7 @@ public class UserController : NetworkBehaviour
                         if (Logging)
                         {
                             //Save the string stating what type of log, the position of the user, the name and at which time during logging
-                            Logger.LogData("Tracking Begun: ", skeletonPos, userId, timePassed);
+                            Logger.instance.LogData("Tracking Begun: ", skeletonPos, userId, timePassed);
                         }
                         //Add the user to the list
                         allUsers.Add(userId);
@@ -245,7 +245,7 @@ public class UserController : NetworkBehaviour
                             //If the users x value is below 10 that means it is within the scene therefore being tracked
                             if (users[j].transform.position.x < 10)
                             {
-                                Logger.LogData("Tracking Continued: ", users[j].transform.position, users[j].name,timePassed);
+                                Logger.instance.LogData("Tracking Continued: ", users[j].transform.position, users[j].name,timePassed);
                             }
                         }
                         //Set this to false to avoid multiple logs being saved during the same second
@@ -271,7 +271,7 @@ public class UserController : NetworkBehaviour
                         if (waitTimers[i] <= 0)
                         {
                             //When 2 seconds have passed without this user being tracked log the user removal from tracking
-                            Logger.LogData("Tracking Lost: ", skeletonPos, userId, timePassed);
+                            Logger.instance.LogData("Tracking Lost: ", skeletonPos, userId, timePassed);
                             allUsers.Remove(userId);
                             waitTimers[i] = 0;
                         }

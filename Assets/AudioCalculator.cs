@@ -18,13 +18,13 @@ public class AudioCalculator : NetworkBehaviour
     /// </summary>
     private KinectSensor kinectSensor = null;
 
-
+    public string logInput = "AudioTracking_iteration1";
     // Use this for initialization
     void Start () {
         if (Network.isServer)
         {
             kinectSensor = KinectSensor.GetDefault();
-            kinectSensor.AudioSource.PropertyChanged += UpdateAudioTrackingPosition;
+            //kinectSensor.AudioSource.PropertyChanged += UpdateAudioTrackingPosition;
         }
     }
 
@@ -50,6 +50,11 @@ public class AudioCalculator : NetworkBehaviour
             Vector3 interSectionPoint = offsetCalculator.vectorIntersectionPoint(angle1, angle2);
             TrackedVector3 = interSectionPoint;
             AudioTrackedGameObject.transform.position = TrackedVector3;
+        }
+
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            Logger.instance.LogData(logInput, TrackedVector3, 1.ToString() , 0);
         }
     }
 

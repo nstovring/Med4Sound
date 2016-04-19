@@ -62,7 +62,7 @@ public class UserSyncPosition : NetworkBehaviour
         //If the L key is pressed on the keyboard call the method LogPosition
         if (Input.GetKeyUp(KeyCode.L))
         {
-            LogPosition();
+           // LogPosition();
         }
     }
 
@@ -304,7 +304,7 @@ public class UserSyncPosition : NetworkBehaviour
     void LogPosition()
     {
         //Call Logdata static method to save the current position of the gameObject aswell as the id of the client who created this object
-        Logger.LogData("Logging Position", transform.position, transform.rotation.eulerAngles,
+        Logger.instance.LogData("Logging Position", transform.position, transform.rotation.eulerAngles,
             userId, "No time Logged " + (GetComponent<NetworkIdentity>().netId.Value - 1));
     }
 
