@@ -107,6 +107,15 @@ public class OffsetCalculator : NetworkBehaviour {
 
         }
     }
+    public void SaveVariables()
+    {
+        PlayerPrefs.SetFloat("PositionalOffsetX", (positionalOffset.x));
+        PlayerPrefs.SetFloat("PositionalOffsetY", (positionalOffset.y));
+        PlayerPrefs.SetFloat("PositionalOffsetZ", (positionalOffset.z));
+        PlayerPrefs.SetFloat("RotationalOffsetX", (rotationalOffset.x));
+        PlayerPrefs.SetFloat("RotationalOffsetY", (rotationalOffset.y));
+        PlayerPrefs.SetFloat("RotationalOffsetZ", (rotationalOffset.z));
+    }
     //this method calculates the positional offset between the cubes
     public Vector3 GetPositionOffset()
     {
@@ -269,12 +278,14 @@ public class OffsetCalculator : NetworkBehaviour {
                     reset();
                     run_once = false;
                     continuedRun = true;
+                    SaveVariables();
                 }
                 if(amount >= 200 && continuedRun)
                 {
                     adjustOffsets(allPlayers, jointsWeWant, skeletonCreators);
                     reset();
                     continuedRun = false;
+                    SaveVariables();
                 }
             }
 

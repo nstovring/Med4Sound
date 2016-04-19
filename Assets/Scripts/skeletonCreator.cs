@@ -36,7 +36,7 @@ public class skeletonCreator : NetworkBehaviour
         offsetCalculator = OffsetCalculator.offsetCalculator;
         positions = new Vector3[jointAmount];
         joints = new GameObject[jointAmount];
-        sendRate = 0f;
+        sendRate = 0.1f;
         time = 0;
         //spawnObjects();
 
