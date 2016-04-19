@@ -296,11 +296,11 @@ public class OffsetCalculator : NetworkBehaviour {
         {
             skeletonCreators[i].transform.GetComponent<UserSyncPosition>().rotationalOffset = true;
             skeletonCreators[i].transform.GetComponent<UserSyncPosition>().positionalOffset = true;
-            for (int j = 0; j < vectorArrays[i].Length; j++)
-            {
-                vectorArrays[i][j].transform.GetComponent<UserSyncPosition>().rotationalOffset = true;
-                vectorArrays[i][j].transform.GetComponent<UserSyncPosition>().positionalOffset = true;
-            }
+            //for (int j = 0; j < vectorArrays[i].Length; j++)
+            //{
+            //    vectorArrays[i][j].transform.GetComponent<UserSyncPosition>().rotationalOffset = true;
+            //    vectorArrays[i][j].transform.GetComponent<UserSyncPosition>().positionalOffset = true;
+            //}
         }
     }
     public void adjustOffsets(GameObject[][] vectorArrays, int[] commonJoints, GameObject[] skeletonCreators)
@@ -599,7 +599,9 @@ public class OffsetCalculator : NetworkBehaviour {
         if ((d1.z * d2.x - d1.x * d2.z) != 0)
         {
             t = (c.x * d2.z - c.z * d2.x) / (d1.z * d2.x - d1.x * d2.z);
+            Debug.Log("t = " + t);
             intersectionPoint = d1 * t;
+            Debug.Log("intersectionpoint line = " + intersectionPoint);
             intersectionPoint = new Vector3(intersectionPoint.x, 0, intersectionPoint.z);
         }
         return intersectionPoint;
@@ -607,8 +609,11 @@ public class OffsetCalculator : NetworkBehaviour {
     public Vector3 vectorIntersectionPoint(float angle1, float angle2)
     {
         //replace the parameters with the sound angles from kinects
-        if(rotationalOffset.z < 10)
+        //if(rotationalOffset.z < 10)
+        Debug.Log("eat a bit of shit please");
+        if (true)
         {
+            Debug.Log("eat more shit please");
             Quaternion a1 = Quaternion.Euler(0, angle1, 0);
             Quaternion a2 = Quaternion.Euler(0, angle2 + rotationalOffset.y, 0);
             Vector3 d1 = a1 * Vector3.forward;
