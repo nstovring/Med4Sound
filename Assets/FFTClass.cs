@@ -126,7 +126,7 @@ public class FFTClass : MonoBehaviour
 
 
 
-    public float[] ZeroPadSIgnal(float[] signalFloats)
+    public static float[] ZeroPadSIgnal(float[] signalFloats)
     {
         int j = signalFloats.Length;
         List<float> tempSignalFloats = signalFloats.ToList();
@@ -138,14 +138,14 @@ public class FFTClass : MonoBehaviour
         return tempSignalFloats.ToArray();
     }
 
-    public float[] MultiplySIgnals(float[] spectrumFloatsA, float[] spectrumFloatsB)
+    public static float[] MultiplySIgnals(float[] spectrumFloatsA, float[] spectrumFloatsB)
     {
         int j = spectrumFloatsA.Length;
         float[] newSpectrumFloats = new float[j];
 
         for (int i = 0; i < j; i++)
         {
-            float val = spectrumFloatsA[i] - spectrumFloatsB[i];
+            float val = spectrumFloatsA[i] * spectrumFloatsB[i];
             newSpectrumFloats[i] = val;
         }
         return newSpectrumFloats;
