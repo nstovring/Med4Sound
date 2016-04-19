@@ -66,6 +66,11 @@ public class UserSyncPosition : NetworkBehaviour
         }
     }
 
+    void Start()
+    {
+        kinect = KinectSensor.GetDefault();
+    }
+
 
     [ClientCallback]
     //Fixed update runs every physics step instead of every frame. The physics step is usually in lockstep with a timed value therefore better for networking
