@@ -84,7 +84,7 @@ public class AudioCalculator : NetworkBehaviour
     void OnDrawGizmos()
     {
         Gizmos.color = Color.green;
-        Gizmos.DrawSphere(TrackedVector3,0.1f);
+        Gizmos.DrawSphere(TrackedVector3,0.5f);
     }
 
 }
