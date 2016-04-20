@@ -278,7 +278,7 @@ public class OffsetCalculator : NetworkBehaviour {
                     continuedRun = true;
                     SaveOffsets();
                 }
-                if(amount >= 200 && continuedRun)
+                if(amount >= 200 && continuedRun && false)
                 {
                     adjustOffsets(allPlayers, jointsWeWant, skeletonCreators);
                     reset();
