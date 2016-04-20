@@ -669,10 +669,12 @@ public class OffsetCalculator : NetworkBehaviour {
     public float rayLength;
     void OnDrawGizmos()
     {
+        Vector3 tempVector3 = positionalOffset;
+        tempVector3.y = 0;
         Gizmos.color = Color.blue;
         Gizmos.DrawRay(Vector3.zero, directionVector3Origin * rayLength);
         Gizmos.color = Color.red;
-        Gizmos.DrawRay(positionalOffset, directionVector3Offset * rayLength);
+        Gizmos.DrawRay(tempVector3, directionVector3Offset * rayLength);
     }
 
 }

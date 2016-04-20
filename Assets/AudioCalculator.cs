@@ -37,7 +37,7 @@ public class AudioCalculator : NetworkBehaviour
         if (Input.GetKeyDown(KeyCode.A))
         {
             kinectSensor = KinectSensor.GetDefault();
-            kinectSensor.AudioSource.PropertyChanged += UpdateAudioTrackingPosition;
+            //kinectSensor.AudioSource.PropertyChanged += UpdateAudioTrackingPosition;
         }
         offsetCalculator = OffsetCalculator.offsetCalculator;
         if (offsetCalculator != null && offsetCalculator.skeletonCreators.Length > 0)
