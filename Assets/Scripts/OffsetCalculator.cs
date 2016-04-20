@@ -610,6 +610,10 @@ public class OffsetCalculator : NetworkBehaviour {
         }
         return intersectionPoint;
     }
+
+    private Vector3 directionVector3Origin;
+    private Vector3 directionVector3Offset;
+
     public Vector3 vectorIntersectionPoint(float angle1, float angle2)
     {
         //replace the parameters with the sound angles from kinects
@@ -617,9 +621,9 @@ public class OffsetCalculator : NetworkBehaviour {
         {
             Quaternion a1 = Quaternion.Euler(0, angle1, 0);
             Quaternion a2 = Quaternion.Euler(0, angle2 + rotationalOffset.y, 0);
-            Vector3 d1 = a1 * Vector3.forward;
-            Vector3 d2 = a2 * Vector3.forward;
-            return  getIntersectionPoint(d1, d2, new Vector3(positionalOffset.x, 0, positionalOffset.z));
+            directionVector3Origin = a1 * Vector3.forward;
+            directionVector3Offset = a2 * Vector3.forward;
+            return  getIntersectionPoint(directionVector3Origin, directionVector3Offset, new Vector3(positionalOffset.x, 0, positionalOffset.z));
         }
         return Vector3.zero;
     }
@@ -654,4 +658,15 @@ public class OffsetCalculator : NetworkBehaviour {
         angle = 90 - A1;
         return angle;
     }
+
+    [Range(1,10)]
+    public float rayLength;
+    void OnDrawGizmos()
+    {
+        Gizmos.color = Color.blue;
+        Gizmos.DrawRay(Vector3.zero, directionVector3Origin * rayLength);
+        Gizmos.color = Color.red;
+        Gizmos.DrawRay(positionalOffset, directionVector3Offset * rayLength);
+    }
+
 }

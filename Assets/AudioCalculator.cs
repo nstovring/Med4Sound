@@ -61,13 +61,16 @@ public class AudioCalculator : NetworkBehaviour
         }
     }
 
+    private float angle1;
+    private float angle2;
+
     public void UpdateAudioTrackingPosition(object sender, Windows.Data.PropertyChangedEventArgs e)
     {
         Debug.Log("Event Changed!");
         if (offsetCalculator.players.Length > 0)
         {
-            float angle1 = Mathf.Rad2Deg * offsetCalculator.players[0].GetComponent<UserSyncPosition>().beamAngle;
-            float angle2 = Mathf.Rad2Deg * offsetCalculator.players[1].GetComponent<UserSyncPosition>().beamAngle;
+            angle1 = Mathf.Rad2Deg * offsetCalculator.players[0].GetComponent<UserSyncPosition>().beamAngle;
+            angle2 = Mathf.Rad2Deg * offsetCalculator.players[1].GetComponent<UserSyncPosition>().beamAngle;
             
             if (angle1 > 0 && angle2 > 0)
             {
@@ -80,7 +83,8 @@ public class AudioCalculator : NetworkBehaviour
 
     void OnDrawGizmos()
     {
-        Gizmos.DrawSphere(TrackedVector3,1f);
+        Gizmos.color = Color.green;
+        Gizmos.DrawSphere(TrackedVector3,0.1f);
     }
-	  
+
 }
