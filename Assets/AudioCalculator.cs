@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Linq;
 using Windows.Kinect;
 using UnityEngine.Networking;
 
@@ -42,18 +43,16 @@ public class AudioCalculator : NetworkBehaviour
         offsetCalculator = OffsetCalculator.offsetCalculator;
         if (offsetCalculator != null && offsetCalculator.skeletonCreators.Length > 0)
         {
-            Debug.Log("Eat shit & die");
+            //Debug.Log("Eat shit & die");
+            if (offsetCalculator.skeletonCreators.Any(skeletonCreator => skeletonCreator == null))
+            {
+                return;
+            }
             angle1 = Mathf.Rad2Deg * offsetCalculator.skeletonCreators[0].GetComponent<UserSyncPosition>().beamAngle;
             angle2 = Mathf.Rad2Deg * offsetCalculator.skeletonCreators[1].GetComponent<UserSyncPosition>().beamAngle;
 
-            //if (angle1 <= angle2 + offsetCalculator.rotationalOffset.y)
-            //{
-            //    return;
-
-            //}
             Vector3 interSectionPoint = offsetCalculator.vectorIntersectionPoint(angle1, angle2);
             TrackedVector3 = interSectionPoint * -1;
-            //AudioTrackedGameObject.transform.position = TrackedVector3;
         }
 
         if (Input.GetKeyDown(KeyCode.L))

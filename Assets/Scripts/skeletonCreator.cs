@@ -103,14 +103,14 @@ public class skeletonCreator : NetworkBehaviour
     [Command]
     void Cmd_sendJointPositions(Vector3[] positions, Vector3 rotation)
     {
-        Debug.Log("sending joints to " + gameObject.name);
+        //Debug.Log("sending joints to " + gameObject.name);
         this.positions = positions;
         this.rotation = rotation;
     }
     [ClientRpc]
     void Rpc_sendJointPositions(Vector3[] positions, Vector3 rotation)
     {
-        Debug.Log("recieving joints from " + gameObject.name);
+       // Debug.Log("recieving joints from " + gameObject.name);
         this.positions = positions;
     }
     /*void convertToVector3()
