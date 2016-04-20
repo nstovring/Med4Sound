@@ -43,8 +43,8 @@ public class AudioCalculator : NetworkBehaviour
         if (offsetCalculator != null && offsetCalculator.skeletonCreators.Length > 0)
         {
             Debug.Log("Eat shit & die");
-            float angle1 = Mathf.Rad2Deg * offsetCalculator.players[0].GetComponent<UserSyncPosition>().beamAngle;
-            float angle2 = Mathf.Rad2Deg * offsetCalculator.players[1].GetComponent<UserSyncPosition>().beamAngle;
+            angle1 = Mathf.Rad2Deg * offsetCalculator.skeletonCreators[0].GetComponent<UserSyncPosition>().beamAngle;
+            angle2 = Mathf.Rad2Deg * offsetCalculator.skeletonCreators[1].GetComponent<UserSyncPosition>().beamAngle;
 
             //if (angle1 <= angle2 + offsetCalculator.rotationalOffset.y)
             //{
@@ -64,23 +64,6 @@ public class AudioCalculator : NetworkBehaviour
 
     private float angle1;
     private float angle2;
-
-    public void UpdateAudioTrackingPosition(object sender, Windows.Data.PropertyChangedEventArgs e)
-    {
-        Debug.Log("Event Changed!");
-        if (offsetCalculator.players.Length > 0)
-        {
-            angle1 = Mathf.Rad2Deg * offsetCalculator.players[0].GetComponent<UserSyncPosition>().beamAngle;
-            angle2 = Mathf.Rad2Deg * offsetCalculator.players[1].GetComponent<UserSyncPosition>().beamAngle;
-            
-            if (angle1 > 0 && angle2 > 0)
-            {
-                Vector3 interSectionPoint = offsetCalculator.vectorIntersectionPoint(angle1, angle2);
-                TrackedVector3 = interSectionPoint;
-                AudioTrackedGameObject.transform.position = TrackedVector3;
-            }
-        }
-    }
 
     void OnDrawGizmos()
     {

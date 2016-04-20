@@ -665,7 +665,7 @@ public class OffsetCalculator : NetworkBehaviour {
         return angle;
     }
 
-    [Range(1,10)]
+    [Range(1,30)]
     public float rayLength;
     void OnDrawGizmos()
     {
