@@ -247,14 +247,12 @@ public class OffsetCalculator : NetworkBehaviour {
     public void selectedVectorAngles(int[] jointsWeWant)
     {
         skeletonCreators = GameObject.FindGameObjectsWithTag("SkeletonCreator");
-        Debug.Log("Finding skeleton creators, there are + " + skeletonCreators.Length);
         GameObject[][] allPlayers = new GameObject[skeletonCreators.Length][];
         if (skeletonCreators.Length >= 2)
         {
             List<List<int>> commonJoints = new List<List<int>>();
             if(jointsAreTracked(jointsWeWant, commonJoints))
             {
-                Debug.Log("The joints are tracked!");
                 Vector3[][] vectors = new Vector3[skeletonCreators.Length][];
                 foreach (var i in skeletonCreators)
                 {
@@ -263,7 +261,6 @@ public class OffsetCalculator : NetworkBehaviour {
                 commonJoints = findCommonJoints(commonJoints);
                 if (lengthsAreAbove(3, commonJoints))
                 {
-                    Debug.Log("there are three!");
                     for (int i = 0; i < vectors.GetLength(0); i++)
                     {
                         GameObject[] skel = skeletonCreators[i].GetComponent<skeletonCreator>().joints;
@@ -284,7 +281,7 @@ public class OffsetCalculator : NetworkBehaviour {
                 {
                     adjustOffsets(allPlayers, jointsWeWant, skeletonCreators);
                     reset();
-                    continuedRun = false;
+                    //continuedRun = false;
                     SaveVariables();
                 }
             }
@@ -521,7 +518,6 @@ public class OffsetCalculator : NetworkBehaviour {
     }
     public Vector3[] sameVectorAngles(Vector3[][] sortedVectors)
     {
-        Debug.Log("sameVectorAngles is being called!");
         Vector3[] angles = new Vector3[sortedVectors.GetLength(0) - 1];
         if (sortedVectors.GetLength(0) >= 2)
         {
@@ -537,7 +533,6 @@ public class OffsetCalculator : NetworkBehaviour {
                     float[][] m3 = Times3x3(m2, invert3x3(m1));
                     tempAngles[i - 1] = new Vector3(Mathf.Atan2(m3[2][1], m3[2][2]) * Mathf.Rad2Deg, Mathf.Atan2(-m3[2][0], Mathf.Sqrt(Mathf.Pow(m3[2][1], 2) + Mathf.Pow(m3[2][2], 2))) * Mathf.Rad2Deg, Mathf.Atan2(m3[1][0], m3[0][0]) * Mathf.Rad2Deg);
                 }
-                Debug.Log("Things have been converted!");
                 amount++;
                 for (int i = 0; i < angles.Length; i++)
                 {
@@ -554,7 +549,6 @@ public class OffsetCalculator : NetworkBehaviour {
     {
 
         //Debug.Log(number);
-        Debug.Log("Things are being refined!");
         Vector3 v3 = Vector3.Cross(sortedVectors[0][0], sortedVectors[0][1]);
         Vector3[] tempArray = timesArray(sortedVectors[1], Quaternion.Euler(Vector3.up * yAngle));
         Vector3 w3 = Vector3.Cross(tempArray[0], tempArray[1]);
