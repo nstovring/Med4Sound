@@ -52,7 +52,7 @@ public class AudioCalculator : NetworkBehaviour
 
             //}
             Vector3 interSectionPoint = offsetCalculator.vectorIntersectionPoint(angle1, angle2);
-            TrackedVector3 = interSectionPoint;
+            TrackedVector3 = interSectionPoint * -1;
             //AudioTrackedGameObject.transform.position = TrackedVector3;
         }
 
