@@ -15,7 +15,7 @@ public class OffsetCalculator : NetworkBehaviour {
 
     //The players array is useed to contain the cubes in the scene
     public GameObject[] players;
-    private GameObject[] skeletonCreators;
+    public GameObject[] skeletonCreators;
 
     private float player1AngleFromKinect;
 

@@ -39,7 +39,8 @@ public class AudioCalculator : NetworkBehaviour
             kinectSensor = KinectSensor.GetDefault();
             kinectSensor.AudioSource.PropertyChanged += UpdateAudioTrackingPosition;
         }
-        if (offsetCalculator != null && offsetCalculator.players.Length > 0)
+        offsetCalculator = OffsetCalculator.offsetCalculator;
+        if (offsetCalculator != null && offsetCalculator.skeletonCreators.Length > 0)
         {
             Debug.Log("Eat shit & die");
             float angle1 = Mathf.Rad2Deg * offsetCalculator.players[0].GetComponent<UserSyncPosition>().beamAngle;
@@ -52,7 +53,7 @@ public class AudioCalculator : NetworkBehaviour
             //}
             Vector3 interSectionPoint = offsetCalculator.vectorIntersectionPoint(angle1, angle2);
             TrackedVector3 = interSectionPoint;
-            AudioTrackedGameObject.transform.position = TrackedVector3;
+            //AudioTrackedGameObject.transform.position = TrackedVector3;
         }
 
         if (Input.GetKeyDown(KeyCode.L))
