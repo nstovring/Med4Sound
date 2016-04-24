@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-
+using AForge.Math;
 
 public class FFTClass : MonoBehaviour
 {
@@ -30,6 +30,50 @@ public class FFTClass : MonoBehaviour
     }
 
     private List<float> audioSignalSample;
+
+    public void CrossCorrelate(float[] signalA, float[] signalB)
+    {
+        Complex[] ComplexSignalA = new Complex[signalA.Length];
+        Complex[] ComplexSignalB = new Complex[signalB.Length];
+        //Convert float values from signal to complex numbers
+        for (int i = 0; i < signalA.Length; i++)
+        {
+            //First paramet is the real value second is the imaginary
+            ComplexSignalA[i] = new Complex(signalA[i],0);
+            ComplexSignalB[i] = new Complex(signalB[i], 0);
+        }
+
+        double CrossCorrelationCoefficient = CorrelationCoefficient(ComplexSignalA, ComplexSignalB);
+        Debug.Log(CrossCorrelationCoefficient);
+    }
+
+    static Complex[] CrossCorrelation(Complex[] ffta, Complex[] fftb)
+    {
+        var conj = ffta.Select(i => new Complex(i.Re, -i.Im)).ToArray();
+
+        for (int a = 0; a < conj.Length; a++)
+            conj[a] = Complex.Multiply(conj[a], fftb[a]);
+
+        FourierTransform.FFT(conj, FourierTransform.Direction.Backward);
+
+        return conj;
+    }
+
+
+    static double CorrelationCoefficient(Complex[] ffta, Complex[] fftb)
+    {
+        var correlation = CrossCorrelation(ffta, fftb);
+        var a = CrossCorrelation(ffta, ffta);
+        var b = CrossCorrelation(fftb, fftb);
+
+        // Not sure if this part is correct..
+        var numerator = correlation.Select(i => i.SquaredMagnitude).Max();
+        var denominatora = a.Select(i => i.Magnitude).Max();
+        var denominatorb = b.Select(i => i.Magnitude).Max();
+
+        return numerator / (denominatora * denominatorb);
+    }
+
 
     void FFTtesting()
     {
@@ -80,11 +124,14 @@ public class FFTClass : MonoBehaviour
     }
 
     private float[] spectrumA = new float[2048];
-    private float[] spectrumB = new float[256];
+    private float[] spectrumB = new float[2048];
 
 
     private void DisplayFFT()
     {
+
+        CrossCorrelate(spectrumA, spectrumB);
+
         int i = 1;
         while (i < spectrumA.Length - 1)
         {
