@@ -17,16 +17,24 @@ public class FFTClass : MonoBehaviour
     {
         aSource.Play();
         aSource.loop = true;
+        StartCoroutine(delayPlay(0));
+        //bSource.Play();
+        //bSource.loop = true;
+
+
+    }
+
+    IEnumerator delayPlay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
         bSource.Play();
-        bSource.loop = true;
-
-
+        StopCoroutine("delayPlay");
     }
 
     // Update is called once per frame
     void Update () {
         FFTtesting();
-        DisplayFFT();
+        //DisplayFFT();
     }
 
     private List<float> audioSignalSample;
@@ -43,9 +51,15 @@ public class FFTClass : MonoBehaviour
             ComplexSignalB[i] = new Complex(signalB[i], 0);
         }
 
-        double CrossCorrelationCoefficient = CorrelationCoefficient(ComplexSignalA, ComplexSignalB);
-        Debug.Log(CrossCorrelationCoefficient);
+        //crossCorrelationCoefficient = CorrelationCoefficient(ComplexSignalA, ComplexSignalB);
+
+        crossCorrelationCoefficient = Mathf.Lerp((float)crossCorrelationCoefficient,
+            (float)CorrelationCoefficient(ComplexSignalA, ComplexSignalB), 5*Time.deltaTime);
+        //Debug.Log(crossCorrelationCoefficient);
     }
+
+    [Range(0, 1)]
+    public double crossCorrelationCoefficient;
 
     static Complex[] CrossCorrelation(Complex[] ffta, Complex[] fftb)
     {
@@ -96,12 +110,13 @@ public class FFTClass : MonoBehaviour
 
         //aSource.Play();
         //bSource.Play();
-        int spectrumSize = 512;
+        int spectrumSize = 1024;
         spectrumA = new float[spectrumSize];
         spectrumB = new float[spectrumSize];
 
         aSource.GetSpectrumData(spectrumA, 0, FFTWindow.BlackmanHarris);
         bSource.GetSpectrumData(spectrumB, 0, FFTWindow.BlackmanHarris);
+        CrossCorrelate(spectrumA, spectrumB);
     }
 
     void FFT(List<float> _audioSignalSample)
@@ -126,12 +141,10 @@ public class FFTClass : MonoBehaviour
     private float[] spectrumA = new float[2048];
     private float[] spectrumB = new float[2048];
 
+    public float crossCorrRange = 10;
 
     private void DisplayFFT()
     {
-
-        CrossCorrelate(spectrumA, spectrumB);
-
         int i = 1;
         while (i < spectrumA.Length - 1)
         {
@@ -171,7 +184,7 @@ public class FFTClass : MonoBehaviour
         }
     }
 
-
+ 
 
     public static float[] ZeroPadSIgnal(float[] signalFloats)
     {
