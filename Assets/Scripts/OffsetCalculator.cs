@@ -676,5 +676,99 @@ public class OffsetCalculator : NetworkBehaviour {
         Gizmos.color = Color.red;
         Gizmos.DrawRay(tempVector3, directionVector3Offset * rayLength);
     }
+    public float [] Mean(float[][] input, int mode)
+    {
+        float[] output = new float[0];
+        float total = 0;
+        switch (mode)
+        {
+            case 1:
+                output = new float[input[0].Length];
+                for(int i = 0; i < input[0].Length; i++)
+                {
+                    for (int j = 0; j < input.GetLength(0); j++)
+                    {
+                        total += input[j][i];
+                    }
+                    output[i] = total / input[0].Length;
+                }
+                break;
+            case 2:
+                output = new float[input.GetLength(0)];
+                for (int i = 0; i < input.GetLength(0); i++)
+                {
+                    for (int j = 0; j < input[0].Length; j++)
+                    {
+                        total += input[i][j];
+                    }
+                    output[i] = total / input.GetLength(0);
+                }
+                break;
 
+            default:
+                output = new float[input.GetLength(0)];
+                for (int i = 0; i < input.GetLength(0); i++)
+                {
+                    for (int j = 0; j < input[0].Length; j++)
+                    {
+                        total += input[i][j];
+                    }
+                    output[i] = total / input.GetLength(0);
+                }
+                break;
+
+        }
+        return output;
+
+    }
+    public float Mean(float[] input)
+    {
+        float output = 0;
+        for (int i = 0; i < input.Length; i++)
+        {
+            output += input[i];
+        }
+        output /= input.Length;
+        return output;
+    }
+    public float StandardVariance(float[] input, int mode)
+    {
+        float output = 0;
+        float mean = Mean(input);
+        for (int i = 0; i < input.Length; i++)
+        {
+            output += Mathf.Pow(input[i] - mean, 2);
+        }
+        switch (mode)
+        {
+            //population
+            case 1:
+                output /= input.Length;
+                break;
+            //sample
+            case 2:
+                output /= (input.Length-1);
+                break;
+
+            default:
+                output /= input.Length;
+                break;
+        }
+        return output;
+    }
+
+    public float StandardDeviation(float[] input, int mode)
+    {
+        float output = 0;
+        float SVariance = StandardVariance(input, mode);
+        output = Mathf.Sqrt(SVariance);
+        return output;
+    }
+    public float StandardError(float[] input, int mode)
+    {
+        float output = 0;
+        float SDeviation = StandardDeviation(input, mode);
+        output = SDeviation / (float)Math.Sqrt(input.Length);
+        return output;
+    }
 }
