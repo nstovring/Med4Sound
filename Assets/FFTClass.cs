@@ -17,9 +17,9 @@ public class FFTClass : MonoBehaviour
     {
         aSource.Play();
         aSource.loop = true;
-        StartCoroutine(delayPlay(0));
-        //bSource.Play();
-        //bSource.loop = true;
+        //StartCoroutine(delayPlay(0));
+        bSource.Play();
+        bSource.loop = true;
 
 
     }
