@@ -309,7 +309,7 @@ public class UserSyncPosition : NetworkBehaviour
                 CmdProvidePositionToServer(myTransform.position, myTransform.rotation.eulerAngles);
                 if (kinect.AudioSource.AudioBeams[0].BeamAngleConfidence >= 0.8)
                 {
-                    CmdProvideBeamAngleToServer(kinect.AudioSource.AudioBeams[0].BeamAngle); // MOve later!
+                    CmdProvideBeamAngleToServer(kinect.AudioSource.AudioBeams[0].BeamAngle); // Move later!
                 }
                 timePassed = 0;
             }

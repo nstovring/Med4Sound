@@ -6,8 +6,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Windows.Data;
+using AForge.Math;
+using UnityEngine.Networking;
 
-public class AudioAnalyzer : MonoBehaviour
+public class AudioAnalyzer : NetworkBehaviour
 {
 
     Windows.Kinect.AudioSource aSource1;
@@ -32,42 +34,9 @@ public class AudioAnalyzer : MonoBehaviour
     private const int SamplesPerColumn = 40;
 
     /// <summary>
-    /// Minimum energy of audio to display (a negative number in dB value, where 0 dB is full scale)
-    /// </summary>
-    private const int MinEnergy = -90;
-
-    /// <summary>
-    /// Width of bitmap that stores audio stream energy data ready for visualization.
-    /// </summary>
-    private const int EnergyBitmapWidth = 780;
-
-    /// <summary>
-    /// Height of bitmap that stores audio stream energy data ready for visualization.
-    /// </summary>
-    private const int EnergyBitmapHeight = 195;
-
-    /// <summary>
-    /// Array of background-color pixels corresponding to an area equal to the size of whole energy bitmap.
-    /// </summary>
-    private readonly byte[] backgroundPixels = new byte[EnergyBitmapWidth*EnergyBitmapHeight];
-
-    /// <summary>
     /// Will be allocated a buffer to hold a single sub frame of audio data read from audio stream.
     /// </summary>
     private byte[] audioBuffer = null;
-
-    /// <summary>
-    /// Buffer used to store audio stream energy data as we read audio.
-    /// We store 25% more energy values than we strictly need for visualization to allow for a smoother
-    /// stream animation effect, since rendering happens on a different schedule with respect to audio
-    /// capture.
-    /// </summary>
-    private readonly float[] energy = new float[(uint) (EnergyBitmapWidth*1.25)];
-
-    /// <summary>
-    /// Object for locking energy buffer to synchronize threads.
-    /// </summary>
-    private readonly object energyLock = new object();
 
     /// <summary>
     /// Active Kinect sensor
@@ -94,11 +63,6 @@ public class AudioAnalyzer : MonoBehaviour
     /// This gets re-used while constructing the energy visualization.
     /// </summary>
     private byte[] foregroundPixels;
-
-    /// <summary>
-    /// Sum of squares of audio samples being accumulated to compute the next energy value.
-    /// </summary>
-    private float accumulatedSquareSum;
 
     /// <summary>
     /// Number of audio samples accumulated so far to compute the next energy value.
@@ -143,7 +107,7 @@ public class AudioAnalyzer : MonoBehaviour
     public bool record = false;
     public float recordingTime = 2;
 
-    public List<float> audioSignalSample = new List<float>();
+    //public List<float> audioSignalSample = new List<float>();
     private float[] audioRecording = new float[2056];
 
 
@@ -169,19 +133,12 @@ public class AudioAnalyzer : MonoBehaviour
 
         // Open the reader for the audio frames
         Debug.Log("Setup stuff");
-
         reader = audioSource.OpenReader();
-
         unityAudioSource = GetComponent<UnityEngine.AudioSource>();
         unityAudioSource.clip = AudioClip.Create("SampleClip", audioRecording.Length, 1, 16000, false);
 
     }
 
-    void MatlabMath()
-    {
-      //  mLabClass.
-    }
-    
     public void Update()
     {
         if (reader != null)
@@ -189,74 +146,100 @@ public class AudioAnalyzer : MonoBehaviour
             var audioFrames = reader.AcquireLatestBeamFrames();
             if (audioFrames != null)
             {
-                // it gets here just fine
                 if (audioFrames[0] != null)
                 {
-                    // it never gives me any audio frames!
-                    audioSignalSample = new List<float>();
-                    var subFrameList = audioFrames[0].SubFrames;
-                    foreach (AudioBeamSubFrame subFrame in subFrameList)
-                    {
-                        // Process audio buffer
-                        int j = 0;
-                        subFrame.CopyFrameDataToArray(this.audioBuffer);
-                        for (int i = 0; i < this.audioBuffer.Length; i += BytesPerSample)
-                        {
-                            // Extract the 32-bit IEEE float sample from the byte array
-                            float audioSample = BitConverter.ToSingle(audioBuffer, i);
-                            // add audiosample to array for analysis
-                            audioSignalSample.Add(audioSample);
-                            this.accumulatedSquareSum += audioSample * audioSample;
-                            ++this.accumulatedSampleCount;
-
-                            if (this.accumulatedSampleCount < SamplesPerColumn)
-                            {
-                                continue;
-                            }
-                        }
-                        Debug.Log("Ey!");
-                    }
+                    List<float> audioSignalSample = new List<float>();
+                    //Get the recorded sound
+                    audioSignalSample = GetAudioSignalSample(audioFrames);
                     //Dispose of audioFrame
                     audioFrames[0].Dispose();
                     //Set to null for safety
                     audioFrames[0] = null;
-                    //ZeroPadSavedSignal
+                    //Zero pad saved signal
                     float[] newSignal = ZeroPadSIgnal(audioSignalSample);
-                    audioSignalSample = newSignal.ToList();
-                    unityAudioSource.clip = AudioClip.Create("SampleClip", newSignal.Length, 1, 16000, false);
-                    unityAudioSource.clip.SetData(newSignal, 0);
-                    unityAudioSource.Play();
-                    spectrum = new float[256];
-                    unityAudioSource.GetSpectrumData(spectrum, 0, FFTWindow.BlackmanHarris);
-
-                    ApplyFFT();
+                    //Turn the float array into a Complex array to do Fourier Transform mathematics
+                    Complex[] complexSignal = new Complex[newSignal.Length];
+                    for (int i = 0; i < complexSignal.Length; i++)
+                    {
+                        //First parameter is the real value second is the imaginary
+                        complexSignal[i] = new Complex(newSignal[i], 0);
+                    }
+                    //Apply Fast fourier transform on the signal
+                    FourierTransform.FFT(complexSignal, FourierTransform.Direction.Forward);
+                    //Then send the signal
+                    Cmd_ProvideServerWithSignalSpectrum(complexSignal);
                 }
             }
         }
     }
+   
+    public Complex[] mySpectrum;
 
-
-
-    public float[] spectrum = new float[256];
-
-    private void ApplyFFT()
+    public List<float> GetAudioSignalSample(IList<AudioBeamFrame> audioFrames)
     {
-        unityAudioSource.GetSpectrumData(spectrum, 0, FFTWindow.BlackmanHarris);
-        int i = 1;
-        while (i < spectrum.Length - 1)
+        List<float> audioSignalSample = new List<float>();
+        var subFrameList = audioFrames[0].SubFrames;
+        foreach (AudioBeamSubFrame subFrame in subFrameList)
         {
-            Debug.DrawLine(new Vector3(i - 1, spectrum[i] + 10, 0), new Vector3(i, spectrum[i + 1] + 10, 0), Color.red);
-            Debug.DrawLine(new Vector3(i - 1, Mathf.Log(spectrum[i - 1]) + 10, 2), new Vector3(i, Mathf.Log(spectrum[i]) + 10, 2), Color.cyan);
-            Debug.DrawLine(new Vector3(Mathf.Log(i - 1), spectrum[i - 1] - 10, 1), new Vector3(Mathf.Log(i), spectrum[i] - 10, 1), Color.green);
-            Debug.DrawLine(new Vector3(Mathf.Log(i - 1), Mathf.Log(spectrum[i - 1]), 3), new Vector3(Mathf.Log(i), Mathf.Log(spectrum[i]), 3), Color.yellow);
-            i++;
+            // Process audio buffer
+            subFrame.CopyFrameDataToArray(this.audioBuffer);
+            for (int i = 0; i < this.audioBuffer.Length; i += BytesPerSample)
+            {
+                // Extract the 32-bit IEEE float sample from the byte array
+                float audioSample = BitConverter.ToSingle(audioBuffer, i);
+                // add audiosample to array for analysis
+                if (audioSignalSample.Count > audioBuffer.Length)
+                    break;
+                audioSignalSample.Add(audioSample);
+            }
         }
+        return audioSignalSample;
     }
 
+
+    [Command]
+    void Cmd_ProvideServerWithSignalSpectrum(Complex[] spectrum)
+    {
+        mySpectrum = spectrum;
+    }
+
+    public float GetCrossCorrelationCoefficient(Complex[] spectrumA, Complex[] spectrumB)
+    {
+        return (float) Correlation.CorrelationCoefficient(spectrumA, spectrumB);
+    }
+
+    public bool IsSignalCorrelated(Complex[] spectrumA, Complex[] spectrumB, float correlationThreshold)
+    {
+        if ((float) Correlation.CorrelationCoefficient(spectrumA, spectrumB) > correlationThreshold)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public void CrossCorrelate(float[] signalA, float[] signalB)
+    {
+        Complex[] complexSignalA = new Complex[signalA.Length];
+        Complex[] complexSignalB = new Complex[signalB.Length];
+        //Convert float values from signal to complex numbers
+        for (int i = 0; i < signalA.Length; i++)
+        {
+            //First parameter is the real value second is the imaginary
+            complexSignalA[i] = new Complex(signalA[i], 0);
+            complexSignalB[i] = new Complex(signalB[i], 0);
+        }
+
+        crossCorrelationCoefficient = Mathf.Lerp((float)crossCorrelationCoefficient,
+            (float)Correlation.CorrelationCoefficient(complexSignalA, complexSignalB), 5 * Time.deltaTime);
+    }
+
+    [Range(0, 1)]
+    public double crossCorrelationCoefficient;
+
+    public int maxSignalSize = 2048;
     public float[] ZeroPadSIgnal(List<float> signalFloats)
     {
-        int j = signalFloats.Count;
-        for (int i = 0; i < j; i++)
+        for (int i = signalFloats.Count; i < maxSignalSize; i++)
         {
             signalFloats.Add(0);
         }

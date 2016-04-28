@@ -39,6 +39,7 @@ public class FFTClass : MonoBehaviour
 
     private List<float> audioSignalSample;
 
+    //My method
     public void CrossCorrelate(float[] signalA, float[] signalB)
     {
         Complex[] ComplexSignalA = new Complex[signalA.Length];
@@ -46,48 +47,18 @@ public class FFTClass : MonoBehaviour
         //Convert float values from signal to complex numbers
         for (int i = 0; i < signalA.Length; i++)
         {
-            //First paramet is the real value second is the imaginary
+            //First parameter is the real value second is the imaginary
             ComplexSignalA[i] = new Complex(signalA[i],0);
             ComplexSignalB[i] = new Complex(signalB[i], 0);
         }
 
-        //crossCorrelationCoefficient = CorrelationCoefficient(ComplexSignalA, ComplexSignalB);
-
         crossCorrelationCoefficient = Mathf.Lerp((float)crossCorrelationCoefficient,
-            (float)CorrelationCoefficient(ComplexSignalA, ComplexSignalB), 5*Time.deltaTime);
-        //Debug.Log(crossCorrelationCoefficient);
+            (float)Correlation.CorrelationCoefficient(ComplexSignalA, ComplexSignalB), 5*Time.deltaTime);
     }
 
     [Range(0, 1)]
     public double crossCorrelationCoefficient;
-
-    static Complex[] CrossCorrelation(Complex[] ffta, Complex[] fftb)
-    {
-        var conj = ffta.Select(i => new Complex(i.Re, -i.Im)).ToArray();
-
-        for (int a = 0; a < conj.Length; a++)
-            conj[a] = Complex.Multiply(conj[a], fftb[a]);
-
-        FourierTransform.FFT(conj, FourierTransform.Direction.Backward);
-
-        return conj;
-    }
-
-
-    static double CorrelationCoefficient(Complex[] ffta, Complex[] fftb)
-    {
-        var correlation = CrossCorrelation(ffta, fftb);
-        var a = CrossCorrelation(ffta, ffta);
-        var b = CrossCorrelation(fftb, fftb);
-
-        // Not sure if this part is correct..
-        var numerator = correlation.Select(i => i.SquaredMagnitude).Max();
-        var denominatora = a.Select(i => i.Magnitude).Max();
-        var denominatorb = b.Select(i => i.Magnitude).Max();
-
-        return numerator / (denominatora * denominatorb);
-    }
-
+   
 
     void FFTtesting()
     {

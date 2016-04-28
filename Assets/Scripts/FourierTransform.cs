@@ -11,16 +11,16 @@
 
 namespace AForge.Math
 {
-	using System;
-
-	/// <summary>
-	/// Fourier transformation.
-	/// </summary>
-	/// 
-	/// <remarks>The class implements one dimensional and two dimensional
-	/// Discrete and Fast Fourier Transformation.</remarks>
-	/// 
-	public static class FourierTransform
+    using System;
+    using System.Linq;
+    /// <summary>
+    /// Fourier transformation.
+    /// </summary>
+    /// 
+    /// <remarks>The class implements one dimensional and two dimensional
+    /// Discrete and Fast Fourier Transformation.</remarks>
+    /// 
+    public static class FourierTransform
     {
 		/// <summary>
 		/// Fourier transformation direction.
@@ -306,10 +306,9 @@ namespace AForge.Math
 					data[i, j] = col[i];
 			}
 		}
+        #region Private Region
 
-		#region Private Region
-
-		private const int		minLength	= 2;
+        private const int		minLength	= 2;
 		private const int		maxLength	= 16384;
 		private const int		minBits		= 1;
 		private const int		maxBits		= 14;
