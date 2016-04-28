@@ -17,14 +17,12 @@ public class Correlation : MonoBehaviour {
         return conj;
     }
 
-
     public static double CorrelationCoefficient(Complex[] ffta, Complex[] fftb)
     {
         var correlation = CrossCorrelation(ffta, fftb);
         var a = CrossCorrelation(ffta, ffta);
         var b = CrossCorrelation(fftb, fftb);
 
-        // Not sure if this part is correct..
         var numerator = correlation.Select(i => i.SquaredMagnitude).Max();
         var denominatora = a.Select(i => i.Magnitude).Max();
         var denominatorb = b.Select(i => i.Magnitude).Max();

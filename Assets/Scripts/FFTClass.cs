@@ -20,8 +20,6 @@ public class FFTClass : MonoBehaviour
         //StartCoroutine(delayPlay(0));
         bSource.Play();
         bSource.loop = true;
-
-
     }
 
     IEnumerator delayPlay(float delay)

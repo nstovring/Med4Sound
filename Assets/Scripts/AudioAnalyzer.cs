@@ -11,13 +11,6 @@ using UnityEngine.Networking;
 
 public class AudioAnalyzer : NetworkBehaviour
 {
-
-    Windows.Kinect.AudioSource aSource1;
-    Windows.Kinect.AudioSource aSource2;
-
-    public UnityEngine.AudioSource unityAudioSource;
-    public GameObject AudioGameObject;
-
     /// <summary>
     /// Number of samples captured from Kinect audio stream each millisecond.
     /// </summary>
@@ -27,11 +20,6 @@ public class AudioAnalyzer : NetworkBehaviour
     /// Number of bytes in each Kinect audio stream sample (32-bit IEEE float).
     /// </summary>
     private const int BytesPerSample = sizeof (float);
-
-    /// <summary>
-    /// Number of audio samples represented by each column of pixels in wave bitmap.
-    /// </summary>
-    private const int SamplesPerColumn = 40;
 
     /// <summary>
     /// Will be allocated a buffer to hold a single sub frame of audio data read from audio stream.
@@ -60,54 +48,7 @@ public class AudioAnalyzer : NetworkBehaviour
     [SyncVar]
     public float beamAngleConfidence = 0;
 
-    /// <summary>
-    /// Array of foreground-color pixels corresponding to a line as long as the energy bitmap is tall.
-    /// This gets re-used while constructing the energy visualization.
-    /// </summary>
-    private byte[] foregroundPixels;
-
-    /// <summary>
-    /// Number of audio samples accumulated so far to compute the next energy value.
-    /// </summary>
-    private int accumulatedSampleCount;
-
-    /// <summary>
-    /// Index of next element available in audio energy buffer.
-    /// </summary>
-    private int energyIndex;
-
-    /// <summary>
-    /// Number of newly calculated audio stream energy values that have not yet been
-    /// displayed.
-    /// </summary>
-    private int newEnergyAvailable;
-
-    /// <summary>
-    /// Error between time slice we wanted to display and time slice that we ended up
-    /// displaying, given that we have to display in integer pixels.
-    /// </summary>
-    private float energyError;
-
-    /// <summary>
-    /// Last time energy visualization was rendered to screen.
-    /// </summary>
-    private DateTime? lastEnergyRefreshTime;
-
-    /// <summary>
-    /// Index of first energy element that has never (yet) been displayed to screen.
-    /// </summary>
-    private int energyRefreshIndex;
-
-    AudioBeam aBeam;
-
-    private DepthFrameReader dFrameReader;
-    private Windows.Kinect.AudioSource audioSource;
-
-
-    public Vector3 SyncSoundSource;
-
-    public bool record = false;
-    public float recordingTime = 2;
+    public Complex[] mySpectrum;
 
     //public List<float> audioSignalSample = new List<float>();
     private float[] audioRecording = new float[2056];
@@ -119,14 +60,11 @@ public class AudioAnalyzer : NetworkBehaviour
         //Make sure the FFT is sampling at the same rate as kinect recording
         AudioSettings.outputSampleRate = 16000;
 
-        //kinectSensor = KinectSensor.GetDefault();
         // Get its audio source
         reader = null;
         // Open the sensor
         // Get its audio source
         audioSource = KinectManager.Instance.GetSensorData().AudioSource;
-
-        unityAudioSource = GetComponent<UnityEngine.AudioSource>();
 
         // Allocate 1024 bytes to hold a single audio sub frame. Duration sub frame 
         // is 16 msec, the sample rate is 16khz, which means 256 samples per sub frame. 
@@ -136,44 +74,43 @@ public class AudioAnalyzer : NetworkBehaviour
         // Open the reader for the audio frames
         Debug.Log("Setup stuff");
         reader = audioSource.OpenReader();
-        unityAudioSource = GetComponent<UnityEngine.AudioSource>();
-        unityAudioSource.clip = AudioClip.Create("SampleClip", audioRecording.Length, 1, 16000, false);
-
     }
 
     public void Update()
     {
+       GatherSoundData();
+    }
+
+    void GatherSoundData()
+    {
         if (reader != null)
         {
             var audioFrames = reader.AcquireLatestBeamFrames();
-            if (audioFrames != null)
+            if (audioFrames != null && audioFrames[0] != null)
             {
-                if (audioFrames[0] != null)
-                {
-                    //Get relevant data from the subframes
-                    AudioSubFrameData audioSubFrameData = GetSubFrameData(audioFrames);
-                    //List<float> audioSignalSample = new List<float>();
-                    //Get the recorded sound
-                    //audioSignalSample = GetAudioSignalSample(audioFrames);
-                    //Dispose of audioFrame
-                    audioFrames[0].Dispose();
-                    //Set to null for safety
-                    audioFrames[0] = null;
-                    //Zero pad saved signal
-                    float[] newSignal = ZeroPadSIgnal(audioSubFrameData.signal);
-                    //Turn the float array into a Complex array to do Fourier Transform mathematics
-                    Complex[] complexSignal = new Complex[newSignal.Length];
-                    for (int i = 0; i < complexSignal.Length; i++)
-                    {
-                        //First parameter is the real value second is the imaginary
-                        complexSignal[i] = new Complex(newSignal[i], 0);
-                    }
-                    //Apply Fast fourier transform on the signal
-                    FourierTransform.FFT(complexSignal, FourierTransform.Direction.Forward);
-                    //Then send the signal
-                    Cmd_ProvideServerWithSignalSpectrum(complexSignal);
-                    Cmd_ProvideBeamAngleAndConfidenceToServer(audioSubFrameData.beamAngle, audioSubFrameData.confidence);
+                //Get relevant data from the subframes
+                AudioSubFrameData audioSubFrameData = GetSubFrameData(audioFrames);
+                //Dispose of audioFrame
+                audioFrames[0].Dispose();
+                //Set to null for safety
+                audioFrames[0] = null;
+                //Zero pad saved signal
+                float[] newSignal = audioSubFrameData.GetZeroPaddedSignal().ToArray();
+                //Turn the float array into a Complex array to do FFT
+                Complex[] complexSignal = new Complex[newSignal.Length];
+
+                for (int i = 0; i < complexSignal.Length; i++){
+                    //First parameter is the real value second is the imaginary
+                    complexSignal[i] = new Complex(newSignal[i], 0);
                 }
+                //Apply Fast fourier transform on the signal
+                FourierTransform.FFT(complexSignal, 
+                    FourierTransform.Direction.Forward);
+                //Then send the signal, beam angle and confidence
+                //Cmd_ProvideServerWithSignalSpectrum(complexSignal);
+                //Cmd_ProvideBeamAngleAndConfidenceToServer(audioSubFrameData.beamAngle, audioSubFrameData.confidence);
+                Cmd_ProvideServerWithSignalData(complexSignal, 
+                    audioSubFrameData.beamAngle, audioSubFrameData.confidence);
             }
         }
     }
@@ -183,9 +120,44 @@ public class AudioAnalyzer : NetworkBehaviour
         public List<float> signal;
         public float beamAngle;
         public float confidence;
+
+        public void ApplyWindowing()
+        {
+            int N = signal.Count;
+            for (int n = 0; n < N; n++)
+            {
+                float blackmanHarrisWindow = 0.35875f - (0.48829f*Mathf.Cos(1.0f*n/N)) + (0.14128f*Mathf.Cos(2.0f*n/N)) -
+                                              (0.01168f*Mathf.Cos(3.0f*n/N));
+                signal[n] *= blackmanHarrisWindow;
+            }
+        }
+
+        public bool IsSignalPowerOfTwo()
+        {
+            return Mathf.IsPowerOfTwo(signal.Count);
+        }
+
+        public void AddOnToSignal(List<float> newSignal)
+        {
+            foreach (float t in newSignal)
+            {
+                signal.Add(t);
+            }
+        }
+        public List<float> GetZeroPaddedSignal()
+        {
+            if (IsSignalPowerOfTwo())
+            {
+                return signal;
+            }
+            while (!IsSignalPowerOfTwo())
+            {
+                signal.Add(0);
+            }
+            return signal;
+        }
     }
-    
-    public Complex[] mySpectrum;
+
 
     public AudioSubFrameData GetSubFrameData(IList<AudioBeamFrame> audioFrames)
     {
@@ -213,6 +185,7 @@ public class AudioAnalyzer : NetworkBehaviour
         return data;
     }
 
+    //Should return a 256 length float array with audio samples
     public List<float> GetAudioSignalSample(IList<AudioBeamFrame> audioFrames)
     {
         List<float> audioSignalSample = new List<float>();
@@ -234,14 +207,20 @@ public class AudioAnalyzer : NetworkBehaviour
         return audioSignalSample;
     }
 
+    [Command]
+    void Cmd_ProvideServerWithSignalData(Complex[] spectrum, float beamAngle, float confidence)
+    {
+        mySpectrum = spectrum;
+        this.beamAngle = beamAngle;
+        beamAngleConfidence = confidence;
+    }
 
     [Command]
     void Cmd_ProvideServerWithSignalSpectrum(Complex[] spectrum)
     {
         mySpectrum = spectrum;
     }
-    [SyncVar]
-    public float confidence;
+   
     /// <summary>
     /// CmdProvideBeamAngleToServer recieves one float from a client which it will then update on the server,
     /// which in turn will update it on all other clients
@@ -251,21 +230,7 @@ public class AudioAnalyzer : NetworkBehaviour
     public void Cmd_ProvideBeamAngleAndConfidenceToServer(float beamAngle, float confidence)
     {
         this.beamAngle = beamAngle;
-        this.confidence = confidence;
-    }
-
-    public float GetCrossCorrelationCoefficient(Complex[] spectrumA, Complex[] spectrumB)
-    {
-        return (float) Correlation.CorrelationCoefficient(spectrumA, spectrumB);
-    }
-
-    public bool IsSignalCorrelated(Complex[] spectrumA, Complex[] spectrumB, float correlationThreshold)
-    {
-        if ((float) Correlation.CorrelationCoefficient(spectrumA, spectrumB) > correlationThreshold)
-        {
-            return true;
-        }
-        return false;
+        beamAngleConfidence = confidence;
     }
 
     public void CrossCorrelate(float[] signalA, float[] signalB)
@@ -287,28 +252,8 @@ public class AudioAnalyzer : NetworkBehaviour
     [Range(0, 1)]
     public double crossCorrelationCoefficient;
 
-    public int maxSignalSize = 2048;
-    public float[] ZeroPadSIgnal(List<float> signalFloats)
-    {
-        for (int i = signalFloats.Count; i < maxSignalSize; i++)
-        {
-            signalFloats.Add(0);
-        }
-        return signalFloats.ToArray();
-    }
-
-    public float[] MultiplySIgnals(float[] spectrumFloatsA, float[] spectrumFloatsB)
-    {
-        int j = spectrumFloatsA.Length;
-        float[] newSpectrumFloats = new float[j];
-
-        for (int i = 0; i < j; i++)
-        {
-            float val = spectrumFloatsA[i]*spectrumFloatsB[i];
-            newSpectrumFloats[i] = val;
-        }
-        return newSpectrumFloats;
-    }
+    private int maxSignalSize = 2048;
+    private Windows.Kinect.AudioSource audioSource;
 
     void OnApplicationQuit()
     {
