@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Linq;
 using Windows.Kinect;
+using AForge.Math;
 using UnityEngine.Networking;
 
 public class AudioCalculator : NetworkBehaviour
@@ -14,6 +15,11 @@ public class AudioCalculator : NetworkBehaviour
     private Vector3 kinectOffset;
     private OffsetCalculator offsetCalculator;
 
+    [SyncVar]
+    public float currentCorrelation;
+
+    private float angle1;
+    private float angle2;
     /// <summary>
     /// Active Kinect sensor
     /// </summary>
@@ -32,6 +38,9 @@ public class AudioCalculator : NetworkBehaviour
     }
 
     private GameObject[] players;
+
+    private AudioAnalyzer[] audioAnalyzers = new AudioAnalyzer[2];
+
     // Update is called once per frame
     void Update ()
 	{
@@ -40,19 +49,28 @@ public class AudioCalculator : NetworkBehaviour
             kinectSensor = KinectSensor.GetDefault();
             //kinectSensor.AudioSource.PropertyChanged += UpdateAudioTrackingPosition;
         }
-        offsetCalculator = OffsetCalculator.offsetCalculator;
-        if (offsetCalculator != null && offsetCalculator.skeletonCreators.Length > 0)
+        GameObject[] skeletonCreators = OffsetCalculator.offsetCalculator.skeletonCreators;
+        if (offsetCalculator != null && skeletonCreators.Length > 0)
         {
             //Debug.Log("Eat shit & die");
-            if (offsetCalculator.skeletonCreators.Any(skeletonCreator => skeletonCreator == null))
+            if (skeletonCreators.Any(skeletonCreator => skeletonCreator == null))
             {
                 return;
             }
-            angle1 = Mathf.Rad2Deg * offsetCalculator.skeletonCreators[0].GetComponent<UserSyncPosition>().beamAngle;
-            angle2 = Mathf.Rad2Deg * offsetCalculator.skeletonCreators[1].GetComponent<UserSyncPosition>().beamAngle;
+            if (audioAnalyzers[0] == null || audioAnalyzers[1] == null)
+            {
+                audioAnalyzers[0] = skeletonCreators[0].GetComponent<AudioAnalyzer>();
+                audioAnalyzers[1] = skeletonCreators[1].GetComponent<AudioAnalyzer>();
+            }
 
-            Vector3 interSectionPoint = offsetCalculator.vectorIntersectionPoint(angle1, angle2);
-            TrackedVector3 = interSectionPoint * -1;
+            if (IsSignalCorrelated(audioAnalyzers[0].mySpectrum, audioAnalyzers[1].mySpectrum, correlationThreshold))
+            {
+                angle1 = Mathf.Rad2Deg*offsetCalculator.skeletonCreators[0].GetComponent<UserSyncPosition>().beamAngle;
+                angle2 = Mathf.Rad2Deg*offsetCalculator.skeletonCreators[1].GetComponent<UserSyncPosition>().beamAngle;
+
+                Vector3 interSectionPoint = offsetCalculator.vectorIntersectionPoint(angle1, angle2);
+                TrackedVector3 = interSectionPoint*-1;
+            }
         }
 
         if (Input.GetKeyDown(KeyCode.L))
@@ -61,9 +79,22 @@ public class AudioCalculator : NetworkBehaviour
         }
     }
 
-    private float angle1;
-    private float angle2;
+    [Range(0, 1f)]
+    public float correlationThreshold = 0.75f;
 
+    public float GetCrossCorrelationCoefficient(Complex[] spectrumA, Complex[] spectrumB)
+    {
+        return (float)Correlation.CorrelationCoefficient(spectrumA, spectrumB);
+    }
+
+    public bool IsSignalCorrelated(Complex[] spectrumA, Complex[] spectrumB, float correlationThreshold)
+    {
+        if ((float)Correlation.CorrelationCoefficient(spectrumA, spectrumB) > correlationThreshold)
+        {
+            return true;
+        }
+        return false;
+    }
     void OnDrawGizmos()
     {
         Gizmos.color = Color.green;

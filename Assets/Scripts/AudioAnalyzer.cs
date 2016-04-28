@@ -51,12 +51,14 @@ public class AudioAnalyzer : NetworkBehaviour
     /// <summary>
     /// Last observed audio beam angle in radians, in the range [-pi/2, +pi/2]
     /// </summary>
-    private float beamAngle = 0;
+    [SyncVar]
+    public float beamAngle = 0;
 
     /// <summary>
     /// Last observed audio beam angle confidence, in the range [0, 1]
     /// </summary>
-    private float beamAngleConfidence = 0;
+    [SyncVar]
+    public float beamAngleConfidence = 0;
 
     /// <summary>
     /// Array of foreground-color pixels corresponding to a line as long as the energy bitmap is tall.
@@ -148,15 +150,17 @@ public class AudioAnalyzer : NetworkBehaviour
             {
                 if (audioFrames[0] != null)
                 {
-                    List<float> audioSignalSample = new List<float>();
+                    //Get relevant data from the subframes
+                    AudioSubFrameData audioSubFrameData = GetSubFrameData(audioFrames);
+                    //List<float> audioSignalSample = new List<float>();
                     //Get the recorded sound
-                    audioSignalSample = GetAudioSignalSample(audioFrames);
+                    //audioSignalSample = GetAudioSignalSample(audioFrames);
                     //Dispose of audioFrame
                     audioFrames[0].Dispose();
                     //Set to null for safety
                     audioFrames[0] = null;
                     //Zero pad saved signal
-                    float[] newSignal = ZeroPadSIgnal(audioSignalSample);
+                    float[] newSignal = ZeroPadSIgnal(audioSubFrameData.signal);
                     //Turn the float array into a Complex array to do Fourier Transform mathematics
                     Complex[] complexSignal = new Complex[newSignal.Length];
                     for (int i = 0; i < complexSignal.Length; i++)
@@ -168,12 +172,46 @@ public class AudioAnalyzer : NetworkBehaviour
                     FourierTransform.FFT(complexSignal, FourierTransform.Direction.Forward);
                     //Then send the signal
                     Cmd_ProvideServerWithSignalSpectrum(complexSignal);
+                    Cmd_ProvideBeamAngleAndConfidenceToServer(audioSubFrameData.beamAngle, audioSubFrameData.confidence);
                 }
             }
         }
     }
-   
+
+    public struct AudioSubFrameData
+    {
+        public List<float> signal;
+        public float beamAngle;
+        public float confidence;
+    }
+    
     public Complex[] mySpectrum;
+
+    public AudioSubFrameData GetSubFrameData(IList<AudioBeamFrame> audioFrames)
+    {
+        AudioSubFrameData data = new AudioSubFrameData();
+
+        List<float> audioSignalSample = new List<float>();
+        var subFrameList = audioFrames[0].SubFrames;
+        foreach (AudioBeamSubFrame subFrame in subFrameList)
+        {
+            // Process audio buffer
+            subFrame.CopyFrameDataToArray(this.audioBuffer);
+            for (int i = 0; i < this.audioBuffer.Length; i += BytesPerSample)
+            {
+                // Extract the 32-bit IEEE float sample from the byte array
+                float audioSample = BitConverter.ToSingle(audioBuffer, i);
+                // add audiosample to array for analysis
+                if (audioSignalSample.Count > audioBuffer.Length)
+                    break;
+                audioSignalSample.Add(audioSample);
+            }
+        }
+        data.signal = audioSignalSample;
+        data.beamAngle = subFrameList[0].BeamAngle;
+        data.confidence = subFrameList[0].BeamAngleConfidence;
+        return data;
+    }
 
     public List<float> GetAudioSignalSample(IList<AudioBeamFrame> audioFrames)
     {
@@ -201,6 +239,19 @@ public class AudioAnalyzer : NetworkBehaviour
     void Cmd_ProvideServerWithSignalSpectrum(Complex[] spectrum)
     {
         mySpectrum = spectrum;
+    }
+    [SyncVar]
+    public float confidence;
+    /// <summary>
+    /// CmdProvideBeamAngleToServer recieves one float from a client which it will then update on the server,
+    /// which in turn will update it on all other clients
+    /// </summary>
+    /// <param name="_beamAngle"></param>
+    [Command]
+    public void Cmd_ProvideBeamAngleAndConfidenceToServer(float beamAngle, float confidence)
+    {
+        this.beamAngle = beamAngle;
+        this.confidence = confidence;
     }
 
     public float GetCrossCorrelationCoefficient(Complex[] spectrumA, Complex[] spectrumB)
