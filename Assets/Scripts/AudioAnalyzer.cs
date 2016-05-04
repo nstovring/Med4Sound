@@ -57,29 +57,45 @@ public class AudioAnalyzer : NetworkBehaviour
     // Use this for initialization
     void Start()
     {
-        //Make sure the FFT is sampling at the same rate as kinect recording
-        AudioSettings.outputSampleRate = 16000;
-
         // Get its audio source
         reader = null;
         // Open the sensor
+
+        kinectSensor = KinectSensor.GetDefault();
+
+        if (kinectSensor != null)
+        {
+            if (!kinectSensor.IsOpen)
+            {
+                kinectSensor.Open();
+            }
+
+            //initialize audio reader
+            audioSource = kinectSensor.AudioSource;
+            this.audioBuffer = new byte[audioSource.SubFrameLengthInBytes];
+            reader = kinectSensor.AudioSource.OpenReader();
+
+        }
+
         // Get its audio source
-        audioSource = KinectManager.Instance.GetSensorData().AudioSource;
+        //audioSource = KinectManager.Instance.GetSensorData().AudioSource;
 
         // Allocate 1024 bytes to hold a single audio sub frame. Duration sub frame 
         // is 16 msec, the sample rate is 16khz, which means 256 samples per sub frame. 
         // With 4 bytes per sample, that gives us 1024 bytes.
-        audioBuffer = new byte[audioSource.SubFrameLengthInBytes];
+       // audioBuffer = new byte[audioSource.SubFrameLengthInBytes];
 
         // Open the reader for the audio frames
         Debug.Log("Setup stuff");
-        reader = audioSource.OpenReader();
+        //reader = audioSource.OpenReader();
     }
 
     public void Update()
     {
        GatherSoundData();
     }
+
+    public float[] newSignal;
 
     void GatherSoundData()
     {
@@ -95,7 +111,10 @@ public class AudioAnalyzer : NetworkBehaviour
                 //Set to null for safety
                 audioFrames[0] = null;
                 //Zero pad saved signal
-                float[] newSignal = audioSubFrameData.GetZeroPaddedSignal().ToArray();
+                audioSubFrameData.ZeroPadSignal();
+                newSignal = audioSubFrameData.signal.ToArray();
+
+               // newSignal = audioSubFrameData.GetZeroPaddedSignal().ToArray();
                 //Turn the float array into a Complex array to do FFT
                 Complex[] complexSignal = new Complex[newSignal.Length];
 
@@ -156,6 +175,18 @@ public class AudioAnalyzer : NetworkBehaviour
             }
             return signal;
         }
+
+        private int[] audioBuffer;
+
+        public void ZeroPadSignal()
+        {
+            audioBuffer = new int[1024];
+            int newSignalSize = audioBuffer.Length - signal.Count;
+            for (int i = 0; i < newSignalSize; i++)
+            {
+                signal.Add(0);
+            }
+        }
     }
 
 
@@ -176,7 +207,7 @@ public class AudioAnalyzer : NetworkBehaviour
                 // add audiosample to array for analysis
                 if (audioSignalSample.Count > audioBuffer.Length)
                     break;
-                audioSignalSample.Add(audioSample);
+                audioSignalSample.Add(audioSample); // Turn into an array maybe
             }
         }
         data.signal = audioSignalSample;

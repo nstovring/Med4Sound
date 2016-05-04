@@ -57,25 +57,28 @@ public class AudioCalculator : NetworkBehaviour
         }
     }
 
+    public GameObject[] skeletonCreators;
     public void AudioTracking()
     {
-        GameObject[] skeletonCreators = OffsetCalculator.offsetCalculator.skeletonCreators;
-        if (offsetCalculator != null && skeletonCreators.Length > 0)
+        //GameObject[] skeletonCreators = OffsetCalculator.offsetCalculator.skeletonCreators;
+        offsetCalculator = OffsetCalculator.offsetCalculator;
+        skeletonCreators = GameObject.FindGameObjectsWithTag("SkeletonCreator");
+        if (offsetCalculator != null && skeletonCreators.Length > 1)
         {
             if (skeletonCreators.Any(skeletonCreator => skeletonCreator == null))
             {
                 return;
             }
-            if (audioAnalyzers.Any(audioAnalyzer => audioAnalyzer == null))
-            {
-                audioAnalyzers[0] = skeletonCreators[0].GetComponent<AudioAnalyzer>();
-                audioAnalyzers[1] = skeletonCreators[1].GetComponent<AudioAnalyzer>();
-            }
+
+            audioAnalyzers[0] = skeletonCreators[0].GetComponent<AudioAnalyzer>();
+            audioAnalyzers[1] = skeletonCreators[1].GetComponent<AudioAnalyzer>();
+
+            Debug.Log(GetCrossCorrelationCoefficient(audioAnalyzers[0].mySpectrum, audioAnalyzers[1].mySpectrum));
 
             if (IsSignalCorrelated(audioAnalyzers[0].mySpectrum, audioAnalyzers[1].mySpectrum, correlationThreshold))
             {
-                angle1 = Mathf.Rad2Deg * offsetCalculator.skeletonCreators[0].GetComponent<UserSyncPosition>().beamAngle;
-                angle2 = Mathf.Rad2Deg * offsetCalculator.skeletonCreators[1].GetComponent<UserSyncPosition>().beamAngle;
+                angle1 = Mathf.Rad2Deg * skeletonCreators[0].GetComponent<UserSyncPosition>().beamAngle;
+                angle2 = Mathf.Rad2Deg * skeletonCreators[1].GetComponent<UserSyncPosition>().beamAngle;
 
                 Vector3 interSectionPoint = offsetCalculator.vectorIntersectionPoint(angle1, angle2);
                 TrackedVector3 = interSectionPoint * -1;
