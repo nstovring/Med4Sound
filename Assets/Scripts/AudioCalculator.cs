@@ -1,5 +1,7 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using Windows.Kinect;
 using AForge.Math;
@@ -7,6 +9,11 @@ using UnityEngine.Networking;
 
 public class AudioCalculator : NetworkBehaviour
 {
+
+    /// <summary>
+    /// Number of bytes in each Kinect audio stream sample (32-bit IEEE float).
+    /// </summary>
+    private const int BytesPerSample = sizeof(float);
     //[SyncVar] private float beamAngle;
     //[SyncVar] private float beamAngle2;
     [SyncVar] public Vector3 TrackedVector3;
@@ -73,7 +80,21 @@ public class AudioCalculator : NetworkBehaviour
             audioAnalyzers[0] = skeletonCreators[0].GetComponent<AudioAnalyzer>();
             audioAnalyzers[1] = skeletonCreators[1].GetComponent<AudioAnalyzer>();
 
-            Debug.Log(GetCrossCorrelationCoefficient(audioAnalyzers[0].mySpectrum, audioAnalyzers[1].mySpectrum));
+            //Debug.Log(GetCrossCorrelationCoefficient(audioAnalyzers[0].mySpectrum, audioAnalyzers[1].mySpectrum));
+            for (int j = 0; j < audioAnalyzers.Length; j++)
+            {
+                List<float> newSignal = new List<float>();
+                for (int i = 0; i < audioAnalyzers[j].audioBuffer.Length; i += BytesPerSample)
+                {
+                    // Extract the 32-bit IEEE float sample from the byte array
+                    float audioSample = BitConverter.ToSingle(audioAnalyzers[j].audioBuffer, i);
+                    // add audiosample to array for analysis
+                    if (newSignal.Count > audioAnalyzers[j].audioBuffer.Length)
+                        break;
+                    newSignal.Add(audioSample); // Turn into an array maybe
+                }
+                audioAnalyzers[j].newSignal = newSignal.ToArray();
+            }
 
             float[] newSignalA = audioAnalyzers[0].newSignal;
             float[] newSignalB = audioAnalyzers[1].newSignal;

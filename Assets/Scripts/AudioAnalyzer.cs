@@ -9,6 +9,7 @@ using Windows.Data;
 using AForge.Math;
 using UnityEngine.Networking;
 
+//[NetworkSettings(channel = 1, sendInterval = 0.2f)]
 public class AudioAnalyzer : NetworkBehaviour
 {
     /// <summary>
@@ -24,7 +25,7 @@ public class AudioAnalyzer : NetworkBehaviour
     /// <summary>
     /// Will be allocated a buffer to hold a single sub frame of audio data read from audio stream.
     /// </summary>
-    private byte[] audioBuffer = null;
+    public byte[] audioBuffer = null;
 
     /// <summary>
     /// Active Kinect sensor
@@ -111,8 +112,8 @@ public class AudioAnalyzer : NetworkBehaviour
                 //Set to null for safety
                 audioFrames[0] = null;
                 //Zero pad saved signal
-                audioSubFrameData.ZeroPadSignal();
-                newSignal = audioSubFrameData.signal.ToArray();
+                //audioSubFrameData.ZeroPadSignal();
+                //newSignal = audioSubFrameData.signal.ToArray();
 
                 //Turn the float array into a Complex array to do FFT
                 //Complex[] complexSignal = new Complex[newSignal.Length];
@@ -128,7 +129,7 @@ public class AudioAnalyzer : NetworkBehaviour
                 //Then send the signal, beam angle and confidence
                 //Cmd_ProvideServerWithSignalSpectrum(complexSignal);
                 //Cmd_ProvideBeamAngleAndConfidenceToServer(audioSubFrameData.beamAngle, audioSubFrameData.confidence);
-                Cmd_ProvideServerWithSignalData(newSignal, 
+                Cmd_ProvideServerWithSignalData(audioBuffer, 
                     audioSubFrameData.beamAngle, audioSubFrameData.confidence);
             }
         }
@@ -239,9 +240,9 @@ public class AudioAnalyzer : NetworkBehaviour
     }
 
     [Command]
-    void Cmd_ProvideServerWithSignalData(float[] newSignal, float beamAngle, float confidence)
+    void Cmd_ProvideServerWithSignalData(byte[] audioBuffer, float beamAngle, float confidence)
     {
-        this.newSignal = newSignal;
+        this.audioBuffer = audioBuffer;
         this.beamAngle = beamAngle;
         beamAngleConfidence = confidence;
     }
