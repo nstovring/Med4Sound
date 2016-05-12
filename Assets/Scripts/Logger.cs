@@ -6,6 +6,8 @@ using System.IO;
 public class Logger : MonoBehaviour
 {
     public string fileName;
+    public string fileNameMatlab = "Matlab_DataLogs";
+
     private bool isLogging;
 
     public static Logger instance;
@@ -20,13 +22,20 @@ public class Logger : MonoBehaviour
 	    instance = this;
         //The system deletes any file named LogTracking.txt at this path
         System.IO.File.Delete(@"C:\Users\Esbern\Dokumenter\LogData\" + fileName+".txt");
-
+        System.IO.File.Delete(@"C:\Users\Esbern\Dokumenter\LogData\" + fileNameMatlab + ".txt");
         //The system should begin to write to this path
         using (StreamWriter file =
               new StreamWriter(@"C:\Users\Esbern\Dokumenter\LogData\" + fileName + ".txt", true))
         {
             //the system writes this as the first line in the .txt document
             file.WriteLine("This is a Header \n");
+        }
+
+        using (StreamWriter file2 =
+              new StreamWriter(@"C:\Users\Esbern\Dokumenter\LogData\" + fileNameMatlab + ".txt", true))
+        {
+            //the system writes this as the first line in the .txt document
+            file2.WriteLine("This is a Header \n");
         }
     }
 
@@ -68,6 +77,16 @@ public class Logger : MonoBehaviour
 
             //System should write first how it's tracking, then a tab or four spaces "    ", then position, etc.
             file.WriteLine(tracking + "\t" + position.x + "\t" + position.z + "\t UserID:" + "\t" + id + "\t" + "Time:" + "\t" + time);
+        }
+
+
+        using (StreamWriter file2 =
+              new StreamWriter(@"C:\Users\Esbern\Dokumenter\LogData\" + fileNameMatlab + ".txt", true))
+        {
+            //Debug.Log(tracking + "\t" + position.x + "\t" + position.z + "\t UserID:" + "\t" + id + "\t" + "Time:" + "\t" + time);
+
+            //System should write first how it's tracking, then a tab or four spaces "    ", then position, etc.
+            file2.WriteLine(position.x + "," + position.z);
         }
     }
 }
