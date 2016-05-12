@@ -239,9 +239,9 @@ public class AudioAnalyzer : NetworkBehaviour
     }
 
     [Command]
-    void Cmd_ProvideServerWithSignalData(float[] spectrum, float beamAngle, float confidence)
+    void Cmd_ProvideServerWithSignalData(float[] newSignal, float beamAngle, float confidence)
     {
-        mySpectrum = spectrum;
+        this.newSignal = newSignal;
         this.beamAngle = beamAngle;
         beamAngleConfidence = confidence;
     }
