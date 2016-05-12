@@ -53,7 +53,7 @@ public class AudioCalculator : NetworkBehaviour
 
         if (Input.GetKeyDown(KeyCode.L))
         {
-            Logger.instance.LogData(trackingType, TrackedVector3, 1.ToString() , 0);
+            Logger.instance.LogData(trackingType, TrackedVector3, angle1 + " , " + angle2 , 0);
         }
     }
 

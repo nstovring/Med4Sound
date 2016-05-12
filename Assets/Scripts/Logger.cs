@@ -19,11 +19,11 @@ public class Logger : MonoBehaviour
 	{
 	    instance = this;
         //The system deletes any file named LogTracking.txt at this path
-        System.IO.File.Delete(@"C:\Users\nstovring\Documents\LogData\"+fileName+".txt");
+        System.IO.File.Delete(@"C:\Users\Esbern\Dokumenter\LogData\" + fileName+".txt");
 
         //The system should begin to write to this path
         using (StreamWriter file =
-              new StreamWriter(@"C:\Users\nstovring\Documents\LogData\" + fileName + ".txt", true))
+              new StreamWriter(@"C:\Users\Esbern\Dokumenter\LogData\" + fileName + ".txt", true))
         {
             //the system writes this as the first line in the .txt document
             file.WriteLine("This is a Header \n");
@@ -43,7 +43,7 @@ public class Logger : MonoBehaviour
     {
         //system writes to specific path
         using (StreamWriter file =
-               new StreamWriter(@"C:\Users\nstovring\Documents\LogData\" + fileName + ".txt", true))
+               new StreamWriter(@"C:\Users\Esbern\Dokumenter\LogData\" + fileName + ".txt", true))
         {
             //System should write first how it's tracking, then a tab or four spaces "    ", then position, etc.
             file.WriteLine(tracking + "\t" + position + "\t Orientation:" + "\t" + rotation + "\t UserID:" + "\t" + id + "\t" + "Time:" + "\t" + time);
@@ -62,7 +62,7 @@ public class Logger : MonoBehaviour
     {
         //system writes to specific path
         using (StreamWriter file =
-               new StreamWriter(@"C:\Users\nstovring\Documents\LogData\" + fileName + ".txt", true))
+               new StreamWriter(@"C:\Users\Esbern\Dokumenter\LogData\" + fileName + ".txt", true))
         {
             Debug.Log(tracking + "\t" + position.x +"\t"+ position.z + "\t UserID:" + "\t" + id + "\t" + "Time:" + "\t" + time);
 
