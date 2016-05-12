@@ -137,8 +137,10 @@ public class AudioCalculator : NetworkBehaviour
 
     public bool IsSignalCorrelated(Complex[] spectrumA, Complex[] spectrumB, float correlationThreshold)
     {
-        if ((float)Correlation.CorrelationCoefficient(spectrumA, spectrumB) > correlationThreshold)
+        currentCorrelation = (float)Correlation.CorrelationCoefficient(spectrumA, spectrumB);
+        if (currentCorrelation > correlationThreshold)
         {
+            
             return true;
         }
         return false;

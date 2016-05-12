@@ -270,7 +270,7 @@ public class OffsetCalculator : NetworkBehaviour {
                     }
                     sameVectorAngles(vectors);
                 }
-                if (amount >= 200 && run_once)
+                if (amount >= 500 && run_once)
                 {
                     getAndSetVectorOffsets(allPlayers, jointsWeWant, skeletonCreators);
                     reset();
@@ -278,7 +278,7 @@ public class OffsetCalculator : NetworkBehaviour {
                     continuedRun = true;
                     SaveOffsets();
                 }
-                if(amount >= 200 && continuedRun && false)
+                if(amount >= 1 && continuedRun && false)
                 {
                     adjustOffsets(allPlayers, jointsWeWant, skeletonCreators);
                     reset();
