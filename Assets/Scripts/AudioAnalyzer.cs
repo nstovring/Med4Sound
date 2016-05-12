@@ -114,21 +114,21 @@ public class AudioAnalyzer : NetworkBehaviour
                 audioSubFrameData.ZeroPadSignal();
                 newSignal = audioSubFrameData.signal.ToArray();
 
-               // newSignal = audioSubFrameData.GetZeroPaddedSignal().ToArray();
                 //Turn the float array into a Complex array to do FFT
-                Complex[] complexSignal = new Complex[newSignal.Length];
+                //Complex[] complexSignal = new Complex[newSignal.Length];
 
-                for (int i = 0; i < complexSignal.Length; i++){
-                    //First parameter is the real value second is the imaginary
-                    complexSignal[i] = new Complex(newSignal[i], 0);
-                }
-                //Apply Fast fourier transform on the signal
-                FourierTransform.FFT(complexSignal, 
-                    FourierTransform.Direction.Forward);
+                //for (int i = 0; i < complexSignal.Length; i++)
+                //{
+                //    //First parameter is the real value second is the imaginary
+                //    complexSignal[i] = new Complex(newSignal[i], 0);
+                //}
+                ////Apply Fast fourier transform on the signal
+                //FourierTransform.FFT(complexSignal,
+                //    FourierTransform.Direction.Forward);
                 //Then send the signal, beam angle and confidence
                 //Cmd_ProvideServerWithSignalSpectrum(complexSignal);
                 //Cmd_ProvideBeamAngleAndConfidenceToServer(audioSubFrameData.beamAngle, audioSubFrameData.confidence);
-                Cmd_ProvideServerWithSignalData(complexSignal, 
+                Cmd_ProvideServerWithSignalData(newSignal, 
                     audioSubFrameData.beamAngle, audioSubFrameData.confidence);
             }
         }
@@ -239,7 +239,7 @@ public class AudioAnalyzer : NetworkBehaviour
     }
 
     [Command]
-    void Cmd_ProvideServerWithSignalData(Complex[] spectrum, float beamAngle, float confidence)
+    void Cmd_ProvideServerWithSignalData(float[] spectrum, float beamAngle, float confidence)
     {
         mySpectrum = spectrum;
         this.beamAngle = beamAngle;

@@ -75,7 +75,27 @@ public class AudioCalculator : NetworkBehaviour
 
             Debug.Log(GetCrossCorrelationCoefficient(audioAnalyzers[0].mySpectrum, audioAnalyzers[1].mySpectrum));
 
-            if (IsSignalCorrelated(audioAnalyzers[0].mySpectrum, audioAnalyzers[1].mySpectrum, correlationThreshold))
+            float[] newSignalA = audioAnalyzers[0].newSignal;
+            float[] newSignalB = audioAnalyzers[1].newSignal;
+
+            Complex[] complexSignalA = new Complex[newSignalA.Length];
+            Complex[] complexSignalB = new Complex[newSignalB.Length];
+
+            for (int i = 0; i < complexSignalA.Length; i++)
+            {
+                //First parameter is the real value second is the imaginary
+                complexSignalA[i] = new Complex(newSignalA[i], 0);
+                complexSignalB[i] = new Complex(newSignalB[i], 0);
+
+            }
+            //Apply Fast fourier transform on the signal
+            FourierTransform.FFT(complexSignalA,
+                FourierTransform.Direction.Forward);
+            FourierTransform.FFT(complexSignalB,
+               FourierTransform.Direction.Forward);
+
+
+            if (IsSignalCorrelated(complexSignalA, complexSignalB, correlationThreshold))
             {
                 angle1 = Mathf.Rad2Deg * skeletonCreators[0].GetComponent<UserSyncPosition>().beamAngle;
                 angle2 = Mathf.Rad2Deg * skeletonCreators[1].GetComponent<UserSyncPosition>().beamAngle;
