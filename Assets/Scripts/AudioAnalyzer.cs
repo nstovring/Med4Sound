@@ -52,7 +52,7 @@ public class AudioAnalyzer : NetworkBehaviour
     public Complex[] mySpectrum;
 
     //public List<float> audioSignalSample = new List<float>();
-    private float[] audioRecording = new float[2056];
+    public float[] audioRecording = new float[2056];
 
 
     // Use this for initialization
@@ -94,6 +94,9 @@ public class AudioAnalyzer : NetworkBehaviour
     public void Update()
     {
        GatherSoundData();
+
+
+        //print(newSignal);
     }
 
     public float[] newSignal;
@@ -191,11 +194,15 @@ public class AudioAnalyzer : NetworkBehaviour
     }
 
 
+    public List<float> audioSignalSample;
+
+    public List<float> nikolaj;
+
     public AudioSubFrameData GetSubFrameData(IList<AudioBeamFrame> audioFrames)
     {
         AudioSubFrameData data = new AudioSubFrameData();
 
-        List<float> audioSignalSample = new List<float>();
+        audioSignalSample = new List<float>();
         var subFrameList = audioFrames[0].SubFrames;
         foreach (AudioBeamSubFrame subFrame in subFrameList)
         {
@@ -210,10 +217,19 @@ public class AudioAnalyzer : NetworkBehaviour
                     break;
                 audioSignalSample.Add(audioSample); // Turn into an array maybe
             }
+            for (int i = 0; i < audioSignalSample.Count; i++) {
+                nikolaj.Add(audioSignalSample[i]);
+            }
+           
         }
+
+        
+
+
         data.signal = audioSignalSample;
         data.beamAngle = subFrameList[0].BeamAngle;
         data.confidence = subFrameList[0].BeamAngleConfidence;
+        newSignal = data.signal.ToArray();
         return data;
     }
 
