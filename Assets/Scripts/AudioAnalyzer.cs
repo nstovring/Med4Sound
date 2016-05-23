@@ -93,13 +93,53 @@ public class AudioAnalyzer : NetworkBehaviour
 
     public void Update()
     {
-       GatherSoundData();
-
-
-        //print(newSignal);
+     
+        GatherSoundData();
+        RecordSound();
+        PlaySound();
     }
 
+    void RecordSound()
+    {
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            isRecording = true;
+            Debug.Log("Recording Sound");
+        }
+        if (isRecording)
+        {
+            recordedTimeElapsed += Time.deltaTime;
+        }
+
+    }
+
+    void PlaySound()
+    {
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            Debug.Log("Playing Sound");
+            isRecording = false;
+            AudioClip clip = AudioClip.Create("Recorded Sound", RecordedFloats.Count,1,16000,false);
+            UnityEngine.AudioSource myAudioSource = GetComponent<UnityEngine.AudioSource>();
+            myAudioSource.clip = clip;
+            myAudioSource.clip.SetData(RecordedFloats.ToArray(), 0);
+            myAudioSource.Play();
+            RecordedFloats = new List<float>();
+            //AudioCalculator.Instance.MyAudioSource.clip = clip;
+            //AudioCalculator.Instance.MyAudioSource.Play();
+        }
+        if (!isRecording)
+        {
+            recordedTimeElapsed = 0;
+        }
+
+    }
+
+
     public float[] newSignal;
+    public bool isRecording = false;
+    public List<float> RecordedFloats;
+    float recordedTimeElapsed = 0;
 
     void GatherSoundData()
     {
@@ -115,23 +155,14 @@ public class AudioAnalyzer : NetworkBehaviour
                 //Set to null for safety
                 audioFrames[0] = null;
                 //Zero pad saved signal
-                //audioSubFrameData.ZeroPadSignal();
-                //newSignal = audioSubFrameData.signal.ToArray();
-
-                //Turn the float array into a Complex array to do FFT
-                //Complex[] complexSignal = new Complex[newSignal.Length];
-
-                //for (int i = 0; i < complexSignal.Length; i++)
-                //{
-                //    //First parameter is the real value second is the imaginary
-                //    complexSignal[i] = new Complex(newSignal[i], 0);
-                //}
-                ////Apply Fast fourier transform on the signal
-                //FourierTransform.FFT(complexSignal,
-                //    FourierTransform.Direction.Forward);
-                //Then send the signal, beam angle and confidence
-                //Cmd_ProvideServerWithSignalSpectrum(complexSignal);
-                //Cmd_ProvideBeamAngleAndConfidenceToServer(audioSubFrameData.beamAngle, audioSubFrameData.confidence);
+                if (isRecording && recordedTimeElapsed < 6)
+                {
+                    for (int i = 0; i < audioSubFrameData.signal.Count; i++)
+                    {
+                        RecordedFloats.Add(audioSubFrameData.signal[i]);
+                    }
+                }
+             
                 Cmd_ProvideServerWithSignalData(audioBuffer, 
                     audioSubFrameData.beamAngle, audioSubFrameData.confidence);
             }

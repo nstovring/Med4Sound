@@ -22,6 +22,8 @@ public class AudioCalculator : NetworkBehaviour
     private Vector3 kinectOffset;
     private OffsetCalculator offsetCalculator;
 
+    public UnityEngine.AudioSource MyAudioSource;
+
     [SyncVar]
     public float currentCorrelation;
 
@@ -32,11 +34,14 @@ public class AudioCalculator : NetworkBehaviour
     /// </summary>
     private KinectSensor kinectSensor = null;
 
+    public static AudioCalculator Instance;
     public string trackingType = "AudioTracking";
     // Use this for initialization
-    void Start () {
+    void Start ()
+    {
+        Instance = this;
         offsetCalculator = OffsetCalculator.offsetCalculator;
-
+        MyAudioSource = GetComponent<UnityEngine.AudioSource>();
         if (Network.isServer)
         {
             kinectSensor = KinectSensor.GetDefault();
@@ -79,9 +84,12 @@ public class AudioCalculator : NetworkBehaviour
 
             audioAnalyzers[0] = skeletonCreators[0].GetComponent<AudioAnalyzer>();
             audioAnalyzers[1] = skeletonCreators[1].GetComponent<AudioAnalyzer>();
-
-            //Debug.Log(GetCrossCorrelationCoefficient(audioAnalyzers[0].mySpectrum, audioAnalyzers[1].mySpectrum));
-            for (int j = 0; j < audioAnalyzers.Length; j++)
+            if (audioAnalyzers[0] == null || audioAnalyzers[1] == null)
+            {
+                return;
+            }
+                //Debug.Log(GetCrossCorrelationCoefficient(audioAnalyzers[0].mySpectrum, audioAnalyzers[1].mySpectrum));
+                for (int j = 0; j < audioAnalyzers.Length; j++)
             {
                 List<float> newSignal = new List<float>();
                 for (int i = 0; i < audioAnalyzers[j].audioBuffer.Length; i += BytesPerSample)
