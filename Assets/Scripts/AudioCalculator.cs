@@ -72,23 +72,17 @@ public class AudioCalculator : NetworkBehaviour
     public GameObject[] skeletonCreators;
     public void AudioTracking()
     {
-        //GameObject[] skeletonCreators = OffsetCalculator.offsetCalculator.skeletonCreators;
         offsetCalculator = OffsetCalculator.offsetCalculator;
         skeletonCreators = GameObject.FindGameObjectsWithTag("SkeletonCreator");
         if (offsetCalculator != null && skeletonCreators.Length > 1)
         {
-            if (skeletonCreators.Any(skeletonCreator => skeletonCreator == null))
-            {
-                return;
-            }
-
             audioAnalyzers[0] = skeletonCreators[0].GetComponent<AudioAnalyzer>();
             audioAnalyzers[1] = skeletonCreators[1].GetComponent<AudioAnalyzer>();
+            int signalLength = 0;
             if (audioAnalyzers[0] == null || audioAnalyzers[1] == null)
             {
                 return;
             }
-                //Debug.Log(GetCrossCorrelationCoefficient(audioAnalyzers[0].mySpectrum, audioAnalyzers[1].mySpectrum));
                 for (int j = 0; j < audioAnalyzers.Length; j++)
             {
                 List<float> newSignal = new List<float>();
@@ -99,36 +93,30 @@ public class AudioCalculator : NetworkBehaviour
                     // add audiosample to array for analysis
                     if (newSignal.Count > audioAnalyzers[j].audioBuffer.Length)
                         break;
-                    newSignal.Add(audioSample); // Turn into an array maybe
+                    newSignal.Add(audioSample);
+                    signalLength ++;
                 }
                 audioAnalyzers[j].newSignal = newSignal.ToArray();
             }
 
-            float[] newSignalA = audioAnalyzers[0].newSignal;
-            float[] newSignalB = audioAnalyzers[1].newSignal;
-
-            Complex[] complexSignalA = new Complex[newSignalA.Length];
-            Complex[] complexSignalB = new Complex[newSignalB.Length];
+            Complex[] complexSignalA = new Complex[signalLength/2];
+            Complex[] complexSignalB = new Complex[signalLength/2];
 
             for (int i = 0; i < complexSignalA.Length; i++)
             {
                 //First parameter is the real value second is the imaginary
-                complexSignalA[i] = new Complex(newSignalA[i], 0);
-                complexSignalB[i] = new Complex(newSignalB[i], 0);
-
+                complexSignalA[i] = new Complex(audioAnalyzers[0].newSignal[i], 0);
+                complexSignalB[i] = new Complex(audioAnalyzers[1].newSignal[i], 0);
             }
             //Apply Fast fourier transform on the signal
             FourierTransform.FFT(complexSignalA,
                 FourierTransform.Direction.Forward);
             FourierTransform.FFT(complexSignalB,
                FourierTransform.Direction.Forward);
-
-
             if (IsSignalCorrelated(complexSignalA, complexSignalB, correlationThreshold))
             {
                 angle1 = Mathf.Rad2Deg * skeletonCreators[0].GetComponent<UserSyncPosition>().beamAngle;
                 angle2 = Mathf.Rad2Deg * skeletonCreators[1].GetComponent<UserSyncPosition>().beamAngle;
-
                 Vector3 interSectionPoint = offsetCalculator.vectorIntersectionPoint(angle1, angle2);
                 TrackedVector3 = interSectionPoint * -1;
             }

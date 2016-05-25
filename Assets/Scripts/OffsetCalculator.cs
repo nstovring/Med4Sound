@@ -312,7 +312,7 @@ public class OffsetCalculator : NetworkBehaviour {
             //{
             //    vectorArrays[i][j].transform.GetComponent<UserSyncPosition>().rotationalOffset = true;
             //    vectorArrays[i][j].transform.GetComponent<UserSyncPosition>().positionalOffset = true;
-            //}
+            //}z
         }
     }
     public void adjustOffsets(GameObject[][] vectorArrays, int[] commonJoints, GameObject[] skeletonCreators)

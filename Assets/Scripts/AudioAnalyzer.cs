@@ -154,7 +154,6 @@ public class AudioAnalyzer : NetworkBehaviour
                 audioFrames[0].Dispose();
                 //Set to null for safety
                 audioFrames[0] = null;
-                //Zero pad saved signal
                 if (isRecording && recordedTimeElapsed < 6)
                 {
                     for (int i = 0; i < audioSubFrameData.signal.Count; i++)
@@ -162,8 +161,7 @@ public class AudioAnalyzer : NetworkBehaviour
                         RecordedFloats.Add(audioSubFrameData.signal[i]);
                     }
                 }
-             
-                Cmd_ProvideServerWithSignalData(audioBuffer, 
+                Cmd_ProvideServerWithSignalData(audioSubFrameData.audiobuffer, 
                     audioSubFrameData.beamAngle, audioSubFrameData.confidence);
             }
         }
@@ -171,6 +169,7 @@ public class AudioAnalyzer : NetworkBehaviour
 
     public struct AudioSubFrameData
     {
+        public byte[] audiobuffer;
         public List<float> signal;
         public float beamAngle;
         public float confidence;
@@ -229,40 +228,50 @@ public class AudioAnalyzer : NetworkBehaviour
 
     public List<float> nikolaj;
 
+    //public AudioSubFrameData GetSubFrameData(IList<AudioBeamFrame> audioFrames)
+    //{
+    //    AudioSubFrameData data = new AudioSubFrameData();
+
+    //    audioSignalSample = new List<float>();
+    //    var subFrameList = audioFrames[0].SubFrames;
+    //    foreach (AudioBeamSubFrame subFrame in subFrameList)
+    //    {
+    //        // Process audio buffer
+    //        subFrame.CopyFrameDataToArray(this.audioBuffer);
+    //        for (int i = 0; i < this.audioBuffer.Length; i += BytesPerSample)
+    //        {
+    //            // Extract the 32-bit IEEE float sample from the byte array
+    //            float audioSample = BitConverter.ToSingle(audioBuffer, i);
+    //            // add audiosample to array for analysis
+    //            if (audioSignalSample.Count > audioBuffer.Length)
+    //                break;
+    //            audioSignalSample.Add(audioSample); // Turn into an array maybe
+    //        }
+    //    }
+    //    data.signal = audioSignalSample;
+    //    data.beamAngle = subFrameList[0].BeamAngle;
+    //    data.confidence = subFrameList[0].BeamAngleConfidence;
+    //    newSignal = data.signal.ToArray();
+    //    return data;
+    //}
+
     public AudioSubFrameData GetSubFrameData(IList<AudioBeamFrame> audioFrames)
     {
         AudioSubFrameData data = new AudioSubFrameData();
 
-        audioSignalSample = new List<float>();
         var subFrameList = audioFrames[0].SubFrames;
-        foreach (AudioBeamSubFrame subFrame in subFrameList)
-        {
-            // Process audio buffer
-            subFrame.CopyFrameDataToArray(this.audioBuffer);
-            for (int i = 0; i < this.audioBuffer.Length; i += BytesPerSample)
-            {
-                // Extract the 32-bit IEEE float sample from the byte array
-                float audioSample = BitConverter.ToSingle(audioBuffer, i);
-                // add audiosample to array for analysis
-                if (audioSignalSample.Count > audioBuffer.Length)
-                    break;
-                audioSignalSample.Add(audioSample); // Turn into an array maybe
-            }
-            for (int i = 0; i < audioSignalSample.Count; i++) {
-                nikolaj.Add(audioSignalSample[i]);
-            }
-           
-        }
 
-        
+        byte[] tempAudioBuffer = new byte[1024];
+        // Process audio buffer
+        subFrameList[0].CopyFrameDataToArray(tempAudioBuffer);
 
-
-        data.signal = audioSignalSample;
+        data.audiobuffer = tempAudioBuffer;
         data.beamAngle = subFrameList[0].BeamAngle;
         data.confidence = subFrameList[0].BeamAngleConfidence;
         newSignal = data.signal.ToArray();
         return data;
     }
+
 
     //Should return a 256 length float array with audio samples
     public List<float> GetAudioSignalSample(IList<AudioBeamFrame> audioFrames)
