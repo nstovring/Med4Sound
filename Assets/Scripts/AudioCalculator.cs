@@ -70,6 +70,7 @@ public class AudioCalculator : NetworkBehaviour
     }
 
     public GameObject[] skeletonCreators;
+    [Server]
     public void AudioTracking()
     {
         offsetCalculator = OffsetCalculator.offsetCalculator;
