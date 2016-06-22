@@ -268,7 +268,7 @@ public class AudioAnalyzer : NetworkBehaviour
         data.audiobuffer = tempAudioBuffer;
         data.beamAngle = subFrameList[0].BeamAngle;
         data.confidence = subFrameList[0].BeamAngleConfidence;
-        newSignal = data.signal.ToArray();
+        //newSignal = data.signal.ToArray();
         return data;
     }
 

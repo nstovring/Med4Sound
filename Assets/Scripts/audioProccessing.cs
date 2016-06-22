@@ -31,7 +31,7 @@ public class audioProccessing : MonoBehaviour
     void Update()
     {
         playerMovement();
-        audioStuff();
+        //audioStuff();
     }
 
 
