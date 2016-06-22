@@ -53,7 +53,6 @@ public class AudioAnalyzer : NetworkBehaviour
 
     //public List<float> audioSignalSample = new List<float>();
     public float[] audioRecording = new float[2056];
-    private Windows.Kinect.AudioSource audioSource;
 
 
     // Use this for initialization
@@ -85,7 +84,11 @@ public class AudioAnalyzer : NetworkBehaviour
         // Allocate 1024 bytes to hold a single audio sub frame. Duration sub frame 
         // is 16 msec, the sample rate is 16khz, which means 256 samples per sub frame. 
         // With 4 bytes per sample, that gives us 1024 bytes.
+       // audioBuffer = new byte[audioSource.SubFrameLengthInBytes];
 
+        // Open the reader for the audio frames
+        Debug.Log("Setup stuff");
+        //reader = audioSource.OpenReader();
     }
 
     public void Update()
@@ -107,6 +110,7 @@ public class AudioAnalyzer : NetworkBehaviour
         {
             recordedTimeElapsed += Time.deltaTime;
         }
+
     }
 
     void PlaySound()
@@ -121,12 +125,16 @@ public class AudioAnalyzer : NetworkBehaviour
             myAudioSource.clip.SetData(RecordedFloats.ToArray(), 0);
             myAudioSource.Play();
             RecordedFloats = new List<float>();
+            //AudioCalculator.Instance.MyAudioSource.clip = clip;
+            //AudioCalculator.Instance.MyAudioSource.Play();
         }
         if (!isRecording)
         {
             recordedTimeElapsed = 0;
         }
+
     }
+
 
     public float[] newSignal;
     public bool isRecording = false;
@@ -218,6 +226,35 @@ public class AudioAnalyzer : NetworkBehaviour
 
     public List<float> audioSignalSample;
 
+    public List<float> nikolaj;
+
+    //public AudioSubFrameData GetSubFrameData(IList<AudioBeamFrame> audioFrames)
+    //{
+    //    AudioSubFrameData data = new AudioSubFrameData();
+
+    //    audioSignalSample = new List<float>();
+    //    var subFrameList = audioFrames[0].SubFrames;
+    //    foreach (AudioBeamSubFrame subFrame in subFrameList)
+    //    {
+    //        // Process audio buffer
+    //        subFrame.CopyFrameDataToArray(this.audioBuffer);
+    //        for (int i = 0; i < this.audioBuffer.Length; i += BytesPerSample)
+    //        {
+    //            // Extract the 32-bit IEEE float sample from the byte array
+    //            float audioSample = BitConverter.ToSingle(audioBuffer, i);
+    //            // add audiosample to array for analysis
+    //            if (audioSignalSample.Count > audioBuffer.Length)
+    //                break;
+    //            audioSignalSample.Add(audioSample); // Turn into an array maybe
+    //        }
+    //    }
+    //    data.signal = audioSignalSample;
+    //    data.beamAngle = subFrameList[0].BeamAngle;
+    //    data.confidence = subFrameList[0].BeamAngleConfidence;
+    //    newSignal = data.signal.ToArray();
+    //    return data;
+    //}
+
     public AudioSubFrameData GetSubFrameData(IList<AudioBeamFrame> audioFrames)
     {
         AudioSubFrameData data = new AudioSubFrameData();
@@ -235,6 +272,29 @@ public class AudioAnalyzer : NetworkBehaviour
         return data;
     }
 
+
+    //Should return a 256 length float array with audio samples
+    public List<float> GetAudioSignalSample(IList<AudioBeamFrame> audioFrames)
+    {
+        List<float> audioSignalSample = new List<float>();
+        var subFrameList = audioFrames[0].SubFrames;
+        foreach (AudioBeamSubFrame subFrame in subFrameList)
+        {
+            // Process audio buffer
+            subFrame.CopyFrameDataToArray(this.audioBuffer);
+            for (int i = 0; i < this.audioBuffer.Length; i += BytesPerSample)
+            {
+                // Extract the 32-bit IEEE float sample from the byte array
+                float audioSample = BitConverter.ToSingle(audioBuffer, i);
+                // add audiosample to array for analysis
+                if (audioSignalSample.Count > audioBuffer.Length)
+                    break;
+                audioSignalSample.Add(audioSample);
+            }
+        }
+        return audioSignalSample;
+    }
+
     [Command]
     void Cmd_ProvideServerWithSignalData(byte[] audioBuffer, float beamAngle, float confidence)
     {
@@ -243,11 +303,14 @@ public class AudioAnalyzer : NetworkBehaviour
         beamAngleConfidence = confidence;
     }
 
+    private int maxSignalSize = 2048;
+    private Windows.Kinect.AudioSource audioSource;
 
     void OnApplicationQuit()
     {
         if (this.reader != null)
         {
+            // AudioBeamFrameReader is IDisposable
             audioSource.OpenReader().Dispose();
             this.reader.Dispose();
             this.reader = null;
