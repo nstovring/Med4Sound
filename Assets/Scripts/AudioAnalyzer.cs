@@ -303,6 +303,43 @@ public class AudioAnalyzer : NetworkBehaviour
         beamAngleConfidence = confidence;
     }
 
+    [Command]
+    void Cmd_ProvideServerWithSignalSpectrum(Complex[] spectrum)
+    {
+        mySpectrum = spectrum;
+    }
+   
+    /// <summary>
+    /// CmdProvideBeamAngleToServer recieves one float from a client which it will then update on the server,
+    /// which in turn will update it on all other clients
+    /// </summary>
+    /// <param name="_beamAngle"></param>
+    [Command]
+    public void Cmd_ProvideBeamAngleAndConfidenceToServer(float beamAngle, float confidence)
+    {
+        this.beamAngle = beamAngle;
+        beamAngleConfidence = confidence;
+    }
+
+    public void CrossCorrelate(float[] signalA, float[] signalB)
+    {
+        Complex[] complexSignalA = new Complex[signalA.Length];
+        Complex[] complexSignalB = new Complex[signalB.Length];
+        //Convert float values from signal to complex numbers
+        for (int i = 0; i < signalA.Length; i++)
+        {
+            //First parameter is the real value second is the imaginary
+            complexSignalA[i] = new Complex(signalA[i], 0);
+            complexSignalB[i] = new Complex(signalB[i], 0);
+        }
+
+        crossCorrelationCoefficient = Mathf.Lerp((float)crossCorrelationCoefficient,
+            (float)Correlation.CorrelationCoefficient(complexSignalA, complexSignalB), 5 * Time.deltaTime);
+    }
+
+    [Range(0, 1)]
+    public double crossCorrelationCoefficient;
+
     private int maxSignalSize = 2048;
     private Windows.Kinect.AudioSource audioSource;
 
