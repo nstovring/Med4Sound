@@ -83,6 +83,10 @@ public class AudioCalculator : NetworkBehaviour
             {
                 return;
             }
+            if (audioAnalyzers.Any(analyzer => analyzer.beamAngleConfidence < 1))
+            {
+                return;
+            }
                 for (int j = 0; j < audioAnalyzers.Length; j++)
             {
                 List<float> newSignal = new List<float>();
