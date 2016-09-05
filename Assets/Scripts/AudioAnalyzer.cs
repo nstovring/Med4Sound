@@ -96,7 +96,7 @@ public class AudioAnalyzer : NetworkBehaviour
      
         GatherSoundData();
         RecordSound();
-        PlaySound();
+        //PlaySound();
     }
 
     void RecordSound()
@@ -135,12 +135,14 @@ public class AudioAnalyzer : NetworkBehaviour
 
     }
 
+    public audioProccessing AProccessing;
 
     public float[] newSignal;
     public bool isRecording = false;
     public List<float> RecordedFloats;
     float recordedTimeElapsed = 0;
-
+    [Range(0, 5)]
+    public float recordTime = 4f;
     void GatherSoundData()
     {
         if (reader != null)
@@ -154,12 +156,24 @@ public class AudioAnalyzer : NetworkBehaviour
                 audioFrames[0].Dispose();
                 //Set to null for safety
                 audioFrames[0] = null;
-                if (isRecording && recordedTimeElapsed < 6)
+
+
+                AProccessing.PlaySound(GetAudioSignalSample(audioSubFrameData.audiobuffer));
+
+                if (recordedTimeElapsed < recordTime)
                 {
-                    for (int i = 0; i < audioSubFrameData.signal.Count; i++)
+                }
+                if (isRecording && recordedTimeElapsed < recordTime)
+                {
+                    List<float> signalSample = GetAudioSignalSample(audioSubFrameData.audiobuffer);
+                    for (int i = 0; i < signalSample.Count; i++)
                     {
-                        RecordedFloats.Add(audioSubFrameData.signal[i]);
+                        RecordedFloats.Add(signalSample[i]);
                     }
+                }
+                if (recordedTimeElapsed >= recordTime)
+                {
+                    recordedTimeElapsed = 0;
                 }
                 Cmd_ProvideServerWithSignalData(audioSubFrameData.audiobuffer, 
                     audioSubFrameData.beamAngle, audioSubFrameData.confidence);
@@ -292,6 +306,24 @@ public class AudioAnalyzer : NetworkBehaviour
                 audioSignalSample.Add(audioSample);
             }
         }
+        return audioSignalSample;
+    }
+
+    public List<float> GetAudioSignalSample(byte[] _audioBuffer)
+    {
+        List<float> audioSignalSample = new List<float>();
+        
+        // Process audio buffer
+        for (int i = 0; i < this.audioBuffer.Length; i += BytesPerSample)
+        {
+            // Extract the 32-bit IEEE float sample from the byte array
+            float audioSample = BitConverter.ToSingle(audioBuffer, i);
+            // add audiosample to array for analysis
+            if (audioSignalSample.Count > audioBuffer.Length)
+                break;
+            audioSignalSample.Add(audioSample);
+        }
+        
         return audioSignalSample;
     }
 
